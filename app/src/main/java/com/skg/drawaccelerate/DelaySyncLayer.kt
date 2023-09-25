@@ -4,7 +4,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
 
-// 等待android已经完成渲染，再清除加速图层, 避免中间出现间隔闪烁
+// Esperar a que Android termine de renderizar antes de borrar la capa de aceleración para evitar parpadeos intermitentes.
 class DelaySyncLayer(private val mDelayTime: Long) {
     private val mHandlerThread = HandlerThread("delay")
     private val mHandler: Handler

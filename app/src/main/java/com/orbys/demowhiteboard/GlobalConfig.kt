@@ -14,7 +14,6 @@ object GlobalConfig {
     var sMode = 0
     var sPenWidth = 10f
     var sPenColor = Color.RED
-    var sAccelerate = true
     var sEraserWidth = 120f
     var sEraserHeight = 160f
     private var SCREEN_HEIGHT = 2160

@@ -1,5 +1,6 @@
 package com.orbys.demowhiteboard.drawline
 
+import android.util.Log
 import com.skg.drawaccelerate.AccelerateManager
 import com.orbys.demowhiteboard.whiteboard.WriteBoardController
 

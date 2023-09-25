@@ -3,6 +3,7 @@ package com.orbys.demowhiteboard.whiteboard
 import android.content.Context
 import android.graphics.Canvas
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.orbys.demowhiteboard.Distribute
@@ -18,6 +19,7 @@ class WriteBoard(context: Context?, attrs: AttributeSet?) : View(context, attrs)
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
+        Log.d(TAG,"RESIZE")
         mController.resize(w, h)
     }
 
