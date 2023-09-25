@@ -9,7 +9,7 @@ object WriteCommand {
     const val ERASER_INVOKE = DRAW_ACTION + 1
     const val ERASER_SOFT = ERASER_ACTION + 2
     const val ERASER_ACCELERATE = ERASER_ACTION + 3
-    const val ACCELERATE_ACTION = 300
+    private const val ACCELERATE_ACTION = 300
     const val ACCELERATE_FINISH_REQUEST_RENDER = ACCELERATE_ACTION + 1
     private const val DEBUG = 100000
     const val DEBUG_LINE = DEBUG + 1

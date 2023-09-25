@@ -43,6 +43,84 @@
             android:src="@drawable/pen"
             android:scaleType="centerCrop"/>
 
+        <ImageButton
+            android:id="@+id/btnClear"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/clear"
+            android:scaleType="centerCrop"/>
+
+        <ImageButton
+            android:id="@+id/btnBackground"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/backgroundcolor"
+            android:scaleType="centerCrop"/>
+
+        <ImageButton
+            android:id="@+id/btnPalette"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/palette"
+            android:scaleType="centerCrop"/>
+
+        <ImageButton
+            android:id="@+id/btnImageBackground"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/imagebackground"
+            android:scaleType="centerCrop"/>
+
+        <ImageButton
+            android:id="@+id/btnPropsPencil"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/props_pen"
+            android:scaleType="centerCrop"/>
+
+        <ImageButton
+            android:id="@+id/btnUndo"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/undo"
+            android:scaleType="centerCrop"/>
+
+        <ImageButton
+            android:id="@+id/btnRedo"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/redo"
+            android:scaleType="centerCrop"/>
+
+        <ImageButton
+            android:id="@+id/btnSave"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/save"
+            android:scaleType="centerCrop"/>
+
     </LinearLayout>
 
+    <ProgressBar
+        android:id="@+id/pbLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="gone"
+        />
+
+    <SeekBar
+        android:id="@+id/sbPropsPen"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomMenuWhiteboard"
+        android:visibility="gone"
+        android:layout_marginHorizontal="32dp"
+        android:background="@color/white"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>

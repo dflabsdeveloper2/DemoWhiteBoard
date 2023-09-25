@@ -2,7 +2,6 @@ package com.orbys.demowhiteboard.whiteboard
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
@@ -47,7 +46,11 @@ class WriteBoardController(private val callBack: () -> Unit) : Handler.Callback 
     override fun handleMessage(msg: Message): Boolean {
         when (msg.what) {
             WriteCommand.CLEAN -> {
-                mStrokesCanvas?.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                //mStrokesCanvas?.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                mStrokesBitmap = null
+                mStrokesCanvas = null
+                resize(GlobalConfig.SCREEN_WIDTH,GlobalConfig.SCREEN_HEIGHT)
+                render()
             }
             WriteCommand.DRAW_LINE_ACCELERATE -> {
                 val obj = msg.obj as? LineData ?: return true

@@ -43,4 +43,8 @@ class WriteBoard(context: Context?, attrs: AttributeSet?) : View(context, attrs)
     companion object {
         private const val TAG = "chenw::WriteBoard"
     }
+
+    fun clean(){
+        mController.clearWhiteboard()
+    }
 }

@@ -16,10 +16,10 @@ object GlobalConfig {
     var sPenColor = Color.RED
     var sEraserWidth = 120f
     var sEraserHeight = 160f
-    private var SCREEN_HEIGHT = 2160
-    private var SCREEN_WIDTH = 3840
+    var SCREEN_HEIGHT = 2160
+    var SCREEN_WIDTH = 3840
     private var BOX_SIZE = 200
-    val background: Bitmap = Bitmap.createBitmap(
+    var background: Bitmap = Bitmap.createBitmap(
         SCREEN_WIDTH, SCREEN_HEIGHT,
         Bitmap.Config.ARGB_8888
     ).apply {
