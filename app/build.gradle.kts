@@ -51,4 +51,7 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("com.github.skydoves:colorpickerview:2.2.4")
+
+    //Gson
+    implementation("com.google.code.gson:gson:2.10.1")
 }

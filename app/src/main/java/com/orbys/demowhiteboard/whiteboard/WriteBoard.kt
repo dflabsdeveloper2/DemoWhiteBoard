@@ -44,7 +44,15 @@ class WriteBoard(context: Context?, attrs: AttributeSet?) : View(context, attrs)
         private const val TAG = "chenw::WriteBoard"
     }
 
-    fun clean(){
+    fun clean() {
         mController.clearWhiteboard()
+    }
+
+    fun debugCall() {
+        mController.debug()
+    }
+
+    fun saveCall(saved: (String) -> Unit) {
+        mController.saveWhiteboard { saved(it) }
     }
 }

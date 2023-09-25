@@ -83,7 +83,7 @@ class LineData(private val mColor: Int, private val mWidth: Float) {
     val paint: Paint
         get() = config(sPaint)
 
-    fun config(paint: Paint): Paint {
+    private fun config(paint: Paint): Paint {
         paint.flags = Paint.ANTI_ALIAS_FLAG
         paint.color = mColor
         paint.strokeWidth = mWidth
@@ -97,6 +97,10 @@ class LineData(private val mColor: Int, private val mWidth: Float) {
         return if (mTempPoints.size < 1) {
             null
         } else mTempPoints[mTempPoints.size + dx]
+    }
+
+    fun getPoints(): List<PointF> {
+        return mPoints
     }
 
     companion object {

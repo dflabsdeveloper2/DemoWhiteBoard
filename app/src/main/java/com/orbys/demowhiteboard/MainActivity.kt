@@ -1,6 +1,7 @@
 package com.orbys.demowhiteboard
 
 import android.R
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -9,7 +10,9 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Bundle
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
@@ -19,6 +22,8 @@ import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileWriter
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -33,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initUI() {
+        checkPermissions()
         initListenners()
     }
 
@@ -134,6 +140,13 @@ class MainActivity : AppCompatActivity() {
         binding.btnPropsPencil.setOnClickListener {
             initSeekBar()
         }
+
+        binding.btnSave.setOnClickListener {
+            //binding.whiteboard.debugCall()
+            binding.whiteboard.saveCall {
+                writeJsonToInternalFile(it, "prueba")
+            }
+        }
     }
 
     private fun initSeekBar(){
@@ -160,6 +173,35 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+    fun writeJsonToInternalFile(json: String, fileName: String) {
+        // Obtenemos el directorio de almacenamiento interno
+        val directory = filesDir
+
+        // Creamos el fichero
+        val file = File(directory, fileName)
+
+        // Abrimos el fichero para escritura
+        val writer = FileWriter(file)
+
+        // Escribimos el JSON en el fichero
+        writer.write(json)
+
+        // Cerramos el fichero
+        writer.close()
+    }
+
+    private fun checkPermissions(){
+        val hasWritePermission = ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasWritePermission) {
+            Toast.makeText(this,"PERMISOS CONCEDIDOS",Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onStart() {
         super.onStart()
         AccelerateManager.instance.onStart()
