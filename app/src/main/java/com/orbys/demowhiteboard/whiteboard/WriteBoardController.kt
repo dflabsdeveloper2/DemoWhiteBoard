@@ -1,11 +1,13 @@
 package com.orbys.demowhiteboard.whiteboard
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
 import android.util.Log
+import android.widget.Toast
 import com.orbys.demowhiteboard.GlobalConfig
 import com.orbys.demowhiteboard.drawline.AccelerateDrawLineActor
 import com.orbys.demowhiteboard.drawline.DrawLineActor
@@ -18,7 +20,7 @@ import com.orbys.demowhiteboard.model.MyLines
 import com.orbys.demowhiteboard.model.MyPaint
 import com.skg.drawaccelerate.AccelerateManager
 
-class WriteBoardController(private val callBack: () -> Unit) : Handler.Callback {
+class WriteBoardController(private val context:Context, private val callBack: () -> Unit) : Handler.Callback {
     private var mBaseBitmap: Bitmap? = null
     private var mBaseCanvas: Canvas? = null
     private var mStrokesBitmap: Bitmap? = null
@@ -29,13 +31,16 @@ class WriteBoardController(private val callBack: () -> Unit) : Handler.Callback 
     //private val mEraserIndicatorPaint = Paint()
     private val mEraserPaint = MyPaint(ereaser = true)
     private var myLines: MutableList<MyLine>
-    lateinit var myRedoList: MyLines
+    private var myUndoLines: MutableList<MyLine>
+    private var myLinesHistory: MutableList<MyLine>
 
     init {
         mHandlerThread.start()
         mHandler = Handler(mHandlerThread.looper, this)
         //mEraserIndicatorPaint.color = Color.WHITE
         myLines = mutableListOf()
+        myLinesHistory = mutableListOf()
+        myUndoLines = mutableListOf()
     }
 
     fun drawLineAccelerate(data: LineData?) {
@@ -58,18 +63,76 @@ class WriteBoardController(private val callBack: () -> Unit) : Handler.Callback 
         mHandler.obtainMessage(WriteCommand.REDO).sendToTarget()
     }
 
+    fun undoAction(){
+        mHandler.obtainMessage(WriteCommand.UNDO).sendToTarget()
+    }
+
     override fun handleMessage(msg: Message): Boolean {
         when (msg.what) {
             WriteCommand.DEBUG_LINE -> {
                 myLines.forEach {
                     Log.d("LINES", "linia: $it")
                 }
-
             }
 
             WriteCommand.REDO -> {
                 Log.d("REDO", "REDO")
-                //clear()
+                if (myUndoLines.isNotEmpty()) {
+                    val lastUndoneLine = myUndoLines.removeAt(myUndoLines.size - 1)
+                    myLines.add(lastUndoneLine)
+
+                    myLines.forEach {
+                        if (!it.props.ereaser) {
+                            val lineData = LineData(it.props.color, it.props.strokeWidth)
+                            it.line!!.forEach { point ->
+                                lineData.addPoint(point.x, point.y)
+                            }
+                            mStrokesCanvas?.drawPath(lineData.toPath(), it.props.toPaint())
+                        } else {
+                            it.lineEraser!!.forEach {rect->
+                                if (rect != null) {
+                                    mStrokesCanvas?.drawRect(rect, it.props.toPaint())
+                                }
+                            }
+                        }
+                    }
+                    render()
+                }else{
+                    Toast.makeText(context,"No hay mas registros",Toast.LENGTH_SHORT).show()
+                }
+            }
+            WriteCommand.UNDO ->{
+                Log.d("UNDO", "UNDO")
+                myLinesHistory = myLines
+                if(myLinesHistory.isNotEmpty()){
+                    myUndoLines.add(myLinesHistory[myLinesHistory.size-1])
+                    Log.d("UNDO", "myLinesHistory ${myLinesHistory.size}")
+                   clearToRender()
+
+                    val listRedo = myLinesHistory.dropLast(1)
+
+                    listRedo.forEach {
+                        if (!it.props.ereaser) {
+                            val lineData = LineData(it.props.color, it.props.strokeWidth)
+                            it.line!!.forEach { point ->
+                                lineData.addPoint(point.x, point.y)
+                            }
+                            mStrokesCanvas?.drawPath(lineData.toPath(), it.props.toPaint())
+                        } else {
+                            it.lineEraser!!.forEach {rect->
+                                if (rect != null) {
+                                    mStrokesCanvas?.drawRect(rect, it.props.toPaint())
+                                }
+                            }
+                        }
+                    }
+
+                    render()
+
+                    myLines = listRedo.toMutableList()
+                }else{
+                    Toast.makeText(context,"No hay mas registros",Toast.LENGTH_SHORT).show()
+                }
             }
 
             WriteCommand.DRAW_SAVED -> {
@@ -179,14 +242,21 @@ class WriteBoardController(private val callBack: () -> Unit) : Handler.Callback 
         clearWhiteboard()
     }
 
-    fun clear() {
+    private fun clear() {
         mStrokesBitmap = null
         mStrokesCanvas = null
         myLines = mutableListOf()
+        myUndoLines = mutableListOf()
+        myLinesHistory = mutableListOf()
         resize(GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT)
         render()
     }
 
+
+    private fun clearToRender(){
+        resize(GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT)
+        render()
+    }
     companion object {
         private const val TAG = "chenw:;WriteBoardController"
     }

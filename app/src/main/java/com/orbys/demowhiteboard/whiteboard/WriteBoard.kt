@@ -12,8 +12,8 @@ import com.orbys.demowhiteboard.drawline.DrawLineDistribute
 import com.orbys.demowhiteboard.eraser.EraserDistribute
 import com.orbys.demowhiteboard.model.MyLines
 
-class WriteBoard(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
-    private val mController = WriteBoardController { this.postInvalidate() }
+class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) {
+    private val mController = WriteBoardController(context) { this.postInvalidate() }
     private val mDrawLineDistribute: DrawLineDistribute = DrawLineDistribute(mController)
     private val mEraserDistribute: EraserDistribute = EraserDistribute(mController)
     private var mActiveDistribute: Distribute = mDrawLineDistribute
@@ -63,5 +63,9 @@ class WriteBoard(context: Context?, attrs: AttributeSet?) : View(context, attrs)
 
     fun redoBtn(){
         mController.redoAction()
+    }
+
+    fun undoBtn(){
+        mController.undoAction()
     }
 }

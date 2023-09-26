@@ -183,6 +183,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnRedo.setOnClickListener {
             binding.whiteboard.redoBtn()
         }
+
+        binding.btnUndo.setOnClickListener {
+            binding.whiteboard.undoBtn()
+        }
     }
 
     private fun initSeekBar(){
