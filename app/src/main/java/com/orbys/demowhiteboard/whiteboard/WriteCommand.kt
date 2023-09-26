@@ -13,4 +13,7 @@ object WriteCommand {
     const val ACCELERATE_FINISH_REQUEST_RENDER = ACCELERATE_ACTION + 1
     private const val DEBUG = 100000
     const val DEBUG_LINE = DEBUG + 1
+    const val DRAW_SAVED = 150000
+    const val REDO = 123456
+    const val UNDO = 654321
 }

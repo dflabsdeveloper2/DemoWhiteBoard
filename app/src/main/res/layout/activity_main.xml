@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layerType="hardware"
     tools:context=".MainActivity">
 
     <com.orbys.demowhiteboard.whiteboard.WriteBoard
@@ -97,6 +98,13 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:src="@drawable/save"
+            android:scaleType="centerCrop"/>
+
+        <ImageButton
+            android:id="@+id/btnOpen"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/openfile"
             android:scaleType="centerCrop"/>
 
     </LinearLayout>

@@ -4,8 +4,9 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.PointF
+import com.orbys.demowhiteboard.model.MyPaint
 
-class LineData(private val mColor: Int, private val mWidth: Float) {
+class LineData(private val mColor: Int, private val mWidth: Float,) {
     private val mTempPoints: MutableList<PointF> = ArrayList()
     private val mPoints: MutableList<PointF> = ArrayList()
     private var mLastPoint: PointF? = null
@@ -80,8 +81,8 @@ class LineData(private val mColor: Int, private val mWidth: Float) {
         return path
     }
 
-    val paint: Paint
-        get() = config(sPaint)
+    val paint: MyPaint
+        get() = MyPaint(color = mColor, strokeWidth = mWidth)
 
     private fun config(paint: Paint): Paint {
         paint.flags = Paint.ANTI_ALIAS_FLAG

@@ -15,7 +15,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
+import com.orbys.demowhiteboard.model.MyLines
 import com.skg.drawaccelerate.AccelerateManager
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
@@ -23,10 +25,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileReader
 import java.io.FileWriter
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+
+    private lateinit var lines: MyLines
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -144,8 +149,39 @@ class MainActivity : AppCompatActivity() {
         binding.btnSave.setOnClickListener {
             //binding.whiteboard.debugCall()
             binding.whiteboard.saveCall {
-                writeJsonToInternalFile(it, "prueba")
+                lines = it
+
+                val gson = Gson()
+                val json = gson.toJson(it)
+                writeJsonToInternalFile(json)
             }
+        }
+
+        binding.btnOpen.setOnClickListener {
+            if (::lines.isInitialized) {
+                binding.whiteboard.drawSavedJson(lines)
+            } else {
+                val file = File(filesDir, "prueba")
+
+                try {
+                    // Check if the file exists
+                    if (file.exists()) {
+                        // Read the JSON file
+                        val gson = Gson()
+                        val fileReader = FileReader(file)
+                        val myDataClass = gson.fromJson(fileReader, MyLines::class.java)
+                        binding.whiteboard.drawSavedJson(myDataClass)
+                    } else {
+                        Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        binding.btnRedo.setOnClickListener {
+            binding.whiteboard.redoBtn()
         }
     }
 
@@ -174,12 +210,12 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    fun writeJsonToInternalFile(json: String, fileName: String) {
+    private fun writeJsonToInternalFile(json: String) {
         // Obtenemos el directorio de almacenamiento interno
         val directory = filesDir
 
         // Creamos el fichero
-        val file = File(directory, fileName)
+        val file = File(directory, "prueba")
 
         // Abrimos el fichero para escritura
         val writer = FileWriter(file)

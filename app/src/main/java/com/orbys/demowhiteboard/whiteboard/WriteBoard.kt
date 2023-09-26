@@ -10,6 +10,7 @@ import com.orbys.demowhiteboard.Distribute
 import com.orbys.demowhiteboard.GlobalConfig
 import com.orbys.demowhiteboard.drawline.DrawLineDistribute
 import com.orbys.demowhiteboard.eraser.EraserDistribute
+import com.orbys.demowhiteboard.model.MyLines
 
 class WriteBoard(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     private val mController = WriteBoardController { this.postInvalidate() }
@@ -52,7 +53,15 @@ class WriteBoard(context: Context?, attrs: AttributeSet?) : View(context, attrs)
         mController.debug()
     }
 
-    fun saveCall(saved: (String) -> Unit) {
-        mController.saveWhiteboard { saved(it) }
+    fun saveCall(lines: (MyLines) -> Unit) {
+        mController.saveWhiteboard { lines(it) }
+    }
+
+    fun drawSavedJson(data:MyLines){
+        mController.drawSaved(data)
+    }
+
+    fun redoBtn(){
+        mController.redoAction()
     }
 }
