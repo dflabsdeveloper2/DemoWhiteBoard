@@ -9,6 +9,7 @@ import android.os.Message
 import android.util.Log
 import android.widget.Toast
 import com.orbys.demowhiteboard.GlobalConfig
+import com.orbys.demowhiteboard.R
 import com.orbys.demowhiteboard.drawline.AccelerateDrawLineActor
 import com.orbys.demowhiteboard.drawline.DrawLineActor
 import com.orbys.demowhiteboard.drawline.LineData
@@ -140,13 +141,18 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
                 Log.d("SAVE", "OPEN saved whiteboard")
                 val obj = msg.obj as? MyLines ?: return true
+
+                GlobalConfig.backgroundColor = obj.background
                 val lineDraw = obj.listLines
 
                 val offscreenBitmap = Bitmap.createBitmap(
                     GlobalConfig.SCREEN_WIDTH,
                     GlobalConfig.SCREEN_HEIGHT,
                     Bitmap.Config.ARGB_8888
-                )
+                ).apply {
+                        val canvas = Canvas(this)
+                        canvas.drawColor(GlobalConfig.backgroundColor)
+                }
                 val offscreenCanvas = Canvas(offscreenBitmap)
 
                 lineDraw.forEach {
@@ -206,7 +212,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
     fun onRender(canvas: Canvas) {
         Log.d(TAG, "onRender()")
-        canvas.drawBitmap(GlobalConfig.background, 0f, 0f, null)
+        canvas.drawBitmap(GlobalConfig.backgroundBitmap, 0f, 0f, null)
         mStrokesBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
     }
 
@@ -238,13 +244,14 @@ class WriteBoardController(private val context:Context, private val callBack: ()
     }
 
     fun saveWhiteboard(lines: (MyLines) -> Unit) {
-        lines(MyLines(myLines, 1233, 123, 1))
-        clearWhiteboard()
+        lines(MyLines(myLines, GlobalConfig.backgroundColor, 123, 1))
+        clear()
     }
 
     private fun clear() {
         mStrokesBitmap = null
         mStrokesCanvas = null
+        GlobalConfig.backgroundColor = context.getColor(R.color.whiteboard)
         myLines = mutableListOf()
         myUndoLines = mutableListOf()
         myLinesHistory = mutableListOf()

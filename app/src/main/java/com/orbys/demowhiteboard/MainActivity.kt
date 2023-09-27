@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Bundle
@@ -57,15 +56,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnBackground.setOnClickListener {
-            GlobalConfig.background = Bitmap.createBitmap(
-                GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
-                Bitmap.Config.ARGB_8888
-            ).apply {
-                val canvas = Canvas(this)
-                canvas.drawColor(Color.BLUE)
-            }
+            ColorPickerDialog.Builder(this)
+                .setTitle("ColorPicker Dialog")
+                .setPreferenceName("MyColorPickerDialog")
+                .setPositiveButton(getString(R.string.ok),
+                    ColorEnvelopeListener { envelope, _ ->
 
-            binding.whiteboard.invalidate()
+                        GlobalConfig.backgroundColor = envelope.color
+                        GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
+                            GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
+                            Bitmap.Config.ARGB_8888
+                        ).apply {
+                            val canvas = Canvas(this)
+                            canvas.drawColor(GlobalConfig.backgroundColor)
+                        }
+
+                        binding.whiteboard.invalidate()
+                    })
+                .setNegativeButton(
+                    getString(R.string.cancel)
+                ) { dialogInterface, i -> dialogInterface.dismiss() }
+                .show()
         }
 
         binding.btnImageBackground.setOnClickListener {
@@ -80,7 +91,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
 
-                GlobalConfig.background.apply {
+                GlobalConfig.backgroundBitmap.apply {
                     val canvas = Canvas(this)
 
                     val bitmapWidth = bitmap.width
@@ -117,7 +128,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnClear.setOnClickListener {
             binding.whiteboard.apply {
-                GlobalConfig.background.apply {
+                GlobalConfig.backgroundBitmap.apply {
                     val canvas = Canvas(this)
                     canvas.drawColor(-0xffa6b0)
                 }

@@ -3,7 +3,6 @@ package com.orbys.demowhiteboard
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
 
 object GlobalConfig {
 
@@ -18,15 +17,16 @@ object GlobalConfig {
     var sEraserHeight = 160f
     var SCREEN_HEIGHT = 2160
     var SCREEN_WIDTH = 3840
+    var backgroundColor = -0xffa6b0
     private var BOX_SIZE = 200
-    var background: Bitmap = Bitmap.createBitmap(
+    var backgroundBitmap: Bitmap = Bitmap.createBitmap(
         SCREEN_WIDTH, SCREEN_HEIGHT,
         Bitmap.Config.ARGB_8888
     ).apply {
         val canvas = Canvas(this)
-        canvas.drawColor(-0xffa6b0)
-        val paint = Paint()
-        paint.color = -0xffcdd3
+        canvas.drawColor(backgroundColor)
+       /* val paint = Paint()
+        paint.color = -0xffcdd3*/
 
        /* RAYAS EN LA PANTALLA
 
