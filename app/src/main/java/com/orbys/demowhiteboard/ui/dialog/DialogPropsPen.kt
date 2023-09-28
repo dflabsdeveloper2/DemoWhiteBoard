@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
-import android.util.Log
 import android.widget.SeekBar
 import com.orbys.demowhiteboard.GlobalConfig
 import com.orbys.demowhiteboard.databinding.DialogStylePenBinding
@@ -67,9 +66,9 @@ class DialogPropsPen(context: Context, val finish:()->Unit) : Dialog(context) {
 
         binding.vColorFino.setOnClickListener {
             Util.initDialogColor(it.context) { colorSelected ->
-                Log.d("COLOR","color = $colorSelected")
                 roundedViewColorFino.paint.color = colorSelected
                 binding.vColorFino.background = roundedViewColorFino
+                binding.vColorFino.invalidate()
             }
         }
 
@@ -77,6 +76,7 @@ class DialogPropsPen(context: Context, val finish:()->Unit) : Dialog(context) {
             Util.initDialogColor(it.context) { colorSelected ->
                 roundedViewColorGrueso.paint.color = colorSelected
                 binding.vColorGrueso.background = roundedViewColorGrueso
+                binding.vColorGrueso.invalidate()
             }
         }
 
