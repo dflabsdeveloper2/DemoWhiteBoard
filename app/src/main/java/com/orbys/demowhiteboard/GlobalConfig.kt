@@ -13,8 +13,8 @@ object GlobalConfig {
     var sMode = 0
     var sPenWidth = 10f
     var sPenColor = Color.RED
-    var sEraserWidth = 120f
-    var sEraserHeight = 160f
+    var sEraserWidth = 160f
+    var sEraserHeight = 200f
     var SCREEN_HEIGHT = 2160
     var SCREEN_WIDTH = 3840
     var backgroundColor = -0xffa6b0

@@ -4,6 +4,7 @@ import android.util.Log
 import android.util.SparseArray
 import android.view.MotionEvent
 import com.orbys.demowhiteboard.Distribute
+import com.orbys.demowhiteboard.ui.core.Util
 import com.orbys.demowhiteboard.whiteboard.WriteBoardController
 
 class DrawLineDistribute(mController: WriteBoardController) : Distribute {
@@ -16,7 +17,11 @@ class DrawLineDistribute(mController: WriteBoardController) : Distribute {
 
     override fun onTouchEvent(event: MotionEvent) {
         var actionIndex: Int = event.actionIndex
+        val size = event.size
         val action: Int = event.actionMasked
+        if (size< Util.thickPointSize){
+
+        }
         if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) {
             actionIndex = 0
         }

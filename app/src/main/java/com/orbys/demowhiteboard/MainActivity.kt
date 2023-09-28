@@ -1,14 +1,14 @@
 package com.orbys.demowhiteboard
 
-import android.R
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
+import android.net.Uri
 import android.os.Bundle
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -17,9 +17,9 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.model.MyLines
+import com.orbys.demowhiteboard.ui.core.Util
+import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.skg.drawaccelerate.AccelerateManager
-import com.skydoves.colorpickerview.ColorPickerDialog
-import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,36 +47,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initListenners() {
-        binding.btnDraw.setOnClickListener {
+       /* binding.btnDraw.setOnClickListener {
             GlobalConfig.sMode = 0
         }
 
         binding.btnEraser.setOnClickListener {
             GlobalConfig.sMode = 1
-        }
+        }*/
 
         binding.btnBackground.setOnClickListener {
-            ColorPickerDialog.Builder(this)
-                .setTitle("ColorPicker Dialog")
-                .setPreferenceName("MyColorPickerDialog")
-                .setPositiveButton(getString(R.string.ok),
-                    ColorEnvelopeListener { envelope, _ ->
+           Util.initDialogColor(this){ colorSelected ->
+               GlobalConfig.backgroundColor = colorSelected
+               GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
+                   GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
+                   Bitmap.Config.ARGB_8888
+               ).apply {
+                   val canvas = Canvas(this)
+                   canvas.drawColor(GlobalConfig.backgroundColor)
+               }
 
-                        GlobalConfig.backgroundColor = envelope.color
-                        GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
-                            GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
-                            Bitmap.Config.ARGB_8888
-                        ).apply {
-                            val canvas = Canvas(this)
-                            canvas.drawColor(GlobalConfig.backgroundColor)
-                        }
+               binding.whiteboard.invalidate()
+           }
+        }
 
-                        binding.whiteboard.invalidate()
-                    })
-                .setNegativeButton(
-                    getString(R.string.cancel)
-                ) { dialogInterface, i -> dialogInterface.dismiss() }
-                .show()
+        binding.btnWeb.setOnClickListener {
+            val url = "https://myclassbeta.orbys.eu/"
+
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                Toast.makeText(this,"No hay navegador para abrir la url",Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.btnImageBackground.setOnClickListener {
@@ -136,25 +139,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.btnPalette.setOnClickListener {
-            ColorPickerDialog.Builder(this)
-                .setTitle("ColorPicker Dialog")
-                .setPreferenceName("MyColorPickerDialog")
-                .setPositiveButton(getString(R.string.ok),
-                    ColorEnvelopeListener { envelope, _ ->
-                        GlobalConfig.sPenColor = envelope.color
-                        binding.whiteboard.invalidate()
-                    })
-                .setNegativeButton(
-                    getString(R.string.cancel)
-                ) { dialogInterface, i -> dialogInterface.dismiss() }
-                .attachAlphaSlideBar(true) // the default value is true.
-                .attachBrightnessSlideBar(true) // the default value is true.
-                .show()
-        }
-
         binding.btnPropsPencil.setOnClickListener {
-            initSeekBar()
+           val dialogPropsPen = DialogPropsPen(this){
+               binding.whiteboard.invalidate()
+           }
+            dialogPropsPen.setCancelable(false)
+            dialogPropsPen.show()
         }
 
         binding.btnSave.setOnClickListener {
@@ -198,31 +188,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnUndo.setOnClickListener {
             binding.whiteboard.undoBtn()
         }
-    }
-
-    private fun initSeekBar(){
-        val props =binding.sbPropsPen
-        props.min = 0
-        props.max = 100
-        props.progress = GlobalConfig.sPenWidth.toInt()
-
-        props.isVisible = true
-
-        props.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                GlobalConfig.sPenWidth = progress.toFloat()
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar) {
-                // Hacer algo al comenzar a arrastrar el control deslizante
-            }
-
-            override fun onStopTrackingTouch(seekBar: SeekBar) {
-                // Hacer algo al terminar de arrastrar el control deslizante
-                props.isVisible = false
-                binding.whiteboard.invalidate()
-            }
-        })
     }
 
     private fun writeJsonToInternalFile(json: String) {

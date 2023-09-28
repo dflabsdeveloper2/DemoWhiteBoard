@@ -11,6 +11,7 @@ import com.orbys.demowhiteboard.GlobalConfig
 import com.orbys.demowhiteboard.drawline.DrawLineDistribute
 import com.orbys.demowhiteboard.eraser.EraserDistribute
 import com.orbys.demowhiteboard.model.MyLines
+import com.orbys.demowhiteboard.ui.core.Util
 
 class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private val mController = WriteBoardController(context) { this.postInvalidate() }
@@ -26,11 +27,14 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val actionMasked: Int = event.actionMasked
+        val size = event.size
         if (actionMasked == MotionEvent.ACTION_DOWN) {
-            if (GlobalConfig.sMode == 0) {
-                mActiveDistribute = mDrawLineDistribute
-            } else if (GlobalConfig.sMode == 1) {
-                mActiveDistribute = mEraserDistribute
+            mActiveDistribute = if (size< Util.thickPointSize) {
+                GlobalConfig.sMode = 0
+                mDrawLineDistribute
+            } else {
+                GlobalConfig.sMode = 1
+                mEraserDistribute
             }
         }
         mActiveDistribute.onTouchEvent(event)
