@@ -10,15 +10,23 @@ object GlobalConfig {
      * 0 -> draw
      * 1 -> eraser
      */
+    //VAlores Finales
     var sMode = 0
     var sPenWidth = 10f
     var sPenColor = Color.RED
     var sEraserWidth = 160f
     var sEraserHeight = 200f
-    var SCREEN_HEIGHT = 2160
-    var SCREEN_WIDTH = 3840
+    const val SCREEN_HEIGHT = 2160
+    const val SCREEN_WIDTH = 3840
     var backgroundColor = -0xffa6b0
-    private var BOX_SIZE = 200
+
+
+    //VALORES PEN
+    var penWidthFino = 10f
+    var penWidthGrueso = 50f
+    var penColorFino = Color.RED
+    var penColorGrueso = Color.BLACK
+
     var backgroundBitmap: Bitmap = Bitmap.createBitmap(
         SCREEN_WIDTH, SCREEN_HEIGHT,
         Bitmap.Config.ARGB_8888

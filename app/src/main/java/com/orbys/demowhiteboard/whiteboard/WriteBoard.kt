@@ -30,6 +30,13 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
         val size = event.size
         if (actionMasked == MotionEvent.ACTION_DOWN) {
             mActiveDistribute = if (size< Util.thickPointSize) {
+                if(size>Util.finePointSize){
+                    GlobalConfig.sPenWidth = GlobalConfig.penWidthGrueso
+                    GlobalConfig.sPenColor = GlobalConfig.penColorGrueso
+                }else{
+                    GlobalConfig.sPenWidth = GlobalConfig.penWidthFino
+                    GlobalConfig.sPenColor = GlobalConfig.penColorFino
+                }
                 GlobalConfig.sMode = 0
                 mDrawLineDistribute
             } else {

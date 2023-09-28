@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.SeekBar
 import com.orbys.demowhiteboard.GlobalConfig
-import com.orbys.demowhiteboard.R
 import com.orbys.demowhiteboard.databinding.DialogStylePenBinding
 import com.orbys.demowhiteboard.ui.core.Util
 
@@ -54,7 +53,7 @@ class DialogPropsPen(context: Context, val finish:()->Unit) : Dialog(context) {
         binding.sbPropsPenGrueso.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                GlobalConfig.sPenWidth = progress.toFloat()
+                widthPenGrueso = progress.toFloat()
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -88,8 +87,11 @@ class DialogPropsPen(context: Context, val finish:()->Unit) : Dialog(context) {
         binding.btnConfirm.setOnClickListener {
             //GUARDAR DATOS
 
-            GlobalConfig.sPenColor = roundedViewColorFino.paint.color
-            GlobalConfig.sPenWidth = widthPenFino
+            GlobalConfig.penWidthFino = widthPenFino
+            GlobalConfig.penWidthGrueso = widthPenGrueso
+            GlobalConfig.penColorFino = roundedViewColorFino.paint.color
+            GlobalConfig.penColorGrueso = roundedViewColorGrueso.paint.color
+
             finish()
             dismiss()
         }
@@ -100,12 +102,16 @@ class DialogPropsPen(context: Context, val finish:()->Unit) : Dialog(context) {
         roundedViewColorFino = ShapeDrawable(OvalShape())
         roundedViewColorGrueso = ShapeDrawable(OvalShape())
 
-        roundedViewColorFino.paint.color = GlobalConfig.sPenColor
-        roundedViewColorGrueso.paint.color = context.getColor(R.color.black)
+        roundedViewColorFino.paint.color = GlobalConfig.penColorFino
+        roundedViewColorGrueso.paint.color = GlobalConfig.penColorGrueso
 
         binding.vColorFino.background = roundedViewColorFino
         binding.vColorGrueso.background = roundedViewColorGrueso
 
-        binding.sbPropsPenFino.progress = GlobalConfig.sPenWidth.toInt()
+        widthPenFino = GlobalConfig.penWidthFino
+        widthPenGrueso = GlobalConfig.penWidthGrueso
+
+        binding.sbPropsPenFino.progress = widthPenFino.toInt()
+        binding.sbPropsPenGrueso.progress = widthPenGrueso.toInt()
     }
 }
