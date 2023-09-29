@@ -207,15 +207,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("EXPORT","creado dir $d")
             }
 
-            val whiteboardBitmap = Bitmap.createBitmap(
-                binding.whiteboard.width,
-                binding.whiteboard.height,
-                Bitmap.Config.ARGB_8888
-            )
-            val canvas = Canvas(whiteboardBitmap)
-            binding.whiteboard.draw(canvas)
-
-            val dialogExport = DialogExport(this,whiteboardBitmap)
+            val dialogExport = DialogExport(this,binding.whiteboard)
             dialogExport.setCancelable(false)
             dialogExport.show()
         }

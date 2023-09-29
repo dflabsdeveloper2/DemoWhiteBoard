@@ -3,16 +3,18 @@ package com.orbys.demowhiteboard.ui.dialog
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
 import android.os.Environment
 import android.widget.Toast
 import androidx.core.view.isVisible
 import com.orbys.demowhiteboard.R
 import com.orbys.demowhiteboard.databinding.DialogExportImageBinding
+import com.orbys.demowhiteboard.whiteboard.WriteBoard
 import java.io.File
 import java.io.FileOutputStream
 
-class DialogExport(context: Context, private val bitmap: Bitmap):Dialog(context) {
+class DialogExport(context: Context, private val whiteboard: WriteBoard):Dialog(context) {
 
     private lateinit var binding: DialogExportImageBinding
 
@@ -50,10 +52,19 @@ class DialogExport(context: Context, private val bitmap: Bitmap):Dialog(context)
 
             if(nameFile.isNotBlank() && folderName.isNotBlank()){
                 try {
+
+                    val whiteboardBitmap = Bitmap.createBitmap(
+                        whiteboard.width,
+                        whiteboard.height,
+                        Bitmap.Config.ARGB_8888
+                    )
+                    val canvas = Canvas(whiteboardBitmap)
+                    whiteboard.draw(canvas)
+
                     val file = File(Environment.getExternalStoragePublicDirectory(folderName), nameFile+extension)
                     val fileOutputStream = FileOutputStream(file)
 
-                    bitmap.compress(format, 100, fileOutputStream)
+                    whiteboardBitmap.compress(format, 100, fileOutputStream)
                     fileOutputStream.close()
 
                     Toast.makeText(context, "Imagen guardada en ${file.absolutePath}", Toast.LENGTH_SHORT)
