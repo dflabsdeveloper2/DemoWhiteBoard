@@ -23,7 +23,7 @@ object GlobalConfig {
 
     //VALORES PEN
     var penWidthFino = 10f
-    var penWidthGrueso = 50f
+    var penWidthGrueso = 60f
     var penColorFino = Color.RED
     var penColorGrueso = Color.BLACK
 

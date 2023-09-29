@@ -1,5 +1,6 @@
 package com.orbys.demowhiteboard
 
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -9,6 +10,10 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
+import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -18,19 +23,25 @@ import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.model.MyLines
 import com.orbys.demowhiteboard.ui.core.Util
+import com.orbys.demowhiteboard.ui.dialog.DialogExport
 import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.skg.drawaccelerate.AccelerateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.io.FileReader
 import java.io.FileWriter
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
+    private val REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 1234
+
     private lateinit var lines: MyLines
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -42,7 +53,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initUI() {
-        checkPermissions()
         initListenners()
     }
 
@@ -90,7 +100,7 @@ class MainActivity : AppCompatActivity() {
                 val bitmap: Bitmap = withContext(Dispatchers.IO) {
                     BitmapFactory.decodeResource(
                         this@MainActivity.resources,
-                        com.orbys.demowhiteboard.R.drawable.backgroundimagepaisaje
+                        R.drawable.backgroundimagepaisaje
                     )
                 }
 
@@ -188,6 +198,27 @@ class MainActivity : AppCompatActivity() {
         binding.btnUndo.setOnClickListener {
             binding.whiteboard.undoBtn()
         }
+
+        binding.btnExport.setOnClickListener {
+
+            val dir = File(Environment.getExternalStorageDirectory(),"Picture/ORBYS_Whiteboard")
+            if(!dir.exists()){
+                val d = dir.mkdirs()
+                Log.d("EXPORT","creado dir $d")
+            }
+
+            val whiteboardBitmap = Bitmap.createBitmap(
+                binding.whiteboard.width,
+                binding.whiteboard.height,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(whiteboardBitmap)
+            binding.whiteboard.draw(canvas)
+
+            val dialogExport = DialogExport(this,whiteboardBitmap)
+            dialogExport.setCancelable(false)
+            dialogExport.show()
+        }
     }
 
     private fun writeJsonToInternalFile(json: String) {
@@ -205,17 +236,6 @@ class MainActivity : AppCompatActivity() {
 
         // Cerramos el fichero
         writer.close()
-    }
-
-    private fun checkPermissions(){
-        val hasWritePermission = ContextCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasWritePermission) {
-            Toast.makeText(this,"PERMISOS CONCEDIDOS",Toast.LENGTH_SHORT).show()
-        }
     }
 
     override fun onStart() {
