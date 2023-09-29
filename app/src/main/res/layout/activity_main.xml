@@ -18,6 +18,55 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
+        android:id="@+id/llMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:paddingHorizontal="32dp"
+        android:paddingVertical="8dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomMenuWhiteboard">
+
+        <TextView
+            android:id="@+id/tvNew"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="New"
+            />
+
+        <TextView
+            android:id="@+id/tvOpen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Open"
+            />
+
+        <TextView
+            android:id="@+id/tvSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            />
+
+        <TextView
+            android:id="@+id/tvExport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Export"
+            />
+
+        <TextView
+            android:id="@+id/tvClose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Close"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/bottomMenuWhiteboard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

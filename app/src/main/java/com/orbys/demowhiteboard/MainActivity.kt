@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initUI() {
         initListenners()
+        initListennersMenu()
     }
 
     private fun initListenners() {
@@ -59,6 +60,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnEraser.setOnClickListener {
             GlobalConfig.sMode = 1
         }*/
+
+        binding.orbysMenu.setOnClickListener {
+            binding.llMenu.isVisible = !binding.llMenu.isVisible
+        }
 
         binding.btnBackground.setOnClickListener {
            Util.initDialogColor(this){ colorSelected ->
@@ -205,6 +210,28 @@ class MainActivity : AppCompatActivity() {
             val dialogExport = DialogExport(this,binding.whiteboard)
             dialogExport.setCancelable(false)
             dialogExport.show()
+        }
+    }
+
+    private fun initListennersMenu(){
+        binding.tvClose.setOnClickListener {
+            //TODO: Dialogo preguntar guardar antes de cerrar
+
+            val dialogClose = DialogClose(this,this)
+            dialogClose.setCancelable(false)
+            dialogClose.show()
+        }
+
+        binding.tvExport.setOnClickListener {
+            val dialogExport = DialogExport(this,binding.whiteboard)
+            dialogExport.setCancelable(false)
+            dialogExport.show()
+        }
+
+        binding.tvNew.setOnClickListener {
+            //TODO: Dialogo preguntar guardar antes de crear uno nuevo
+            binding.whiteboard.clean()
+            binding.llMenu.isVisible = false
         }
     }
 
