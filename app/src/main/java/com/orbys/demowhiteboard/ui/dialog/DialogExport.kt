@@ -4,8 +4,10 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.pdf.PdfDocument
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.core.view.isVisible
 import com.orbys.demowhiteboard.R
@@ -33,20 +35,22 @@ class DialogExport(context: Context, private val whiteboard: WriteBoard):Dialog(
             val nameFile = binding.etNameFile.text.toString()
             val folderName = /*binding.etFolderFile.text.toString()*/ "Picture/ORBYS_Whiteboard"
             val rgFormat = binding.rgButtonsFormat.checkedRadioButtonId
-            var extension = ".png"
+            val extension: String
 
-            val format:Bitmap.CompressFormat = when (rgFormat) {
+            val format: Bitmap.CompressFormat? = when (rgFormat) {
                 R.id.rbJPEG -> {
                     extension = ".jpeg"
                     Bitmap.CompressFormat.JPEG
                 }
+
                 R.id.rbPNG -> {
                     extension = ".png"
                     Bitmap.CompressFormat.PNG
                 }
+
                 else -> {
                     extension = ".pdf"
-                    Bitmap.CompressFormat.PNG
+                    null
                 }
             }
 
@@ -61,25 +65,67 @@ class DialogExport(context: Context, private val whiteboard: WriteBoard):Dialog(
                     val canvas = Canvas(whiteboardBitmap)
                     whiteboard.draw(canvas)
 
-                    val file = File(Environment.getExternalStoragePublicDirectory(folderName), nameFile+extension)
-                    val fileOutputStream = FileOutputStream(file)
+                    val file = File(
+                        Environment.getExternalStoragePublicDirectory(folderName),
+                        nameFile + extension
+                    )
 
-                    whiteboardBitmap.compress(format, 100, fileOutputStream)
-                    fileOutputStream.close()
+                    val created = if (format == null) {
+                        convertBitmapToPdf(whiteboardBitmap,file)
+                    } else {
+                        val fileOutputStream = FileOutputStream(file)
 
-                    Toast.makeText(context, "Imagen guardada en ${file.absolutePath}", Toast.LENGTH_SHORT)
-                        .show()
+                        whiteboardBitmap.compress(format, 100, fileOutputStream)
+                        fileOutputStream.close()
+                        true
+                    }
+
+                    if (created){
+                        Toast.makeText(
+                            context,
+                            "Imagen guardada en ${file.absolutePath}",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    }
                 }catch (e:Exception){
                     Toast.makeText(context, "Error al guardar la imagen", Toast.LENGTH_SHORT)
                         .show()
                 }
                 binding.pbLoadingDialogExported.isVisible = false
                 dismiss()
-            }else{
+            } else {
                 Toast.makeText(context, "Rellena todos los campos", Toast.LENGTH_SHORT)
                     .show()
             }
             binding.pbLoadingDialogExported.isVisible = false
         }
+    }
+
+    private fun convertBitmapToPdf(bitmap: Bitmap, file: File): Boolean {
+        val pdfDocument = PdfDocument()
+
+        // Crea una página en el documento PDF
+        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, 1).create()
+        val page: PdfDocument.Page = pdfDocument.startPage(pageInfo)
+
+        // Dibuja el Bitmap en la página PDF
+        val canvas = page.canvas
+        canvas.drawBitmap(bitmap, 0f, 0f, null)
+
+        // Finaliza la página
+        pdfDocument.finishPage(page)
+
+        // Guarda el documento PDF en el almacenamiento externo
+        try {
+            val outputStream = FileOutputStream(file)
+            pdfDocument.writeTo(outputStream)
+            pdfDocument.close()
+            outputStream.close()
+        } catch (e: Exception) {
+            Log.d("Export", "Error crear PDF")
+        }
+
+        return file.exists()
     }
 }
