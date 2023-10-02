@@ -142,10 +142,6 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnClear.setOnClickListener {
             binding.whiteboard.apply {
-                GlobalConfig.backgroundBitmap.apply {
-                    val canvas = Canvas(this)
-                    canvas.drawColor(-0xffa6b0)
-                }
                 clean()
             }
         }

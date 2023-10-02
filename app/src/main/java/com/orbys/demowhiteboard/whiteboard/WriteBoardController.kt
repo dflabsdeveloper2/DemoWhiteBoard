@@ -145,14 +145,16 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 GlobalConfig.backgroundColor = obj.background
                 val lineDraw = obj.listLines
 
+                GlobalConfig.backgroundBitmap.apply {
+                    val canvas = Canvas(this)
+                    canvas.drawColor(GlobalConfig.backgroundColor)
+                }
+
                 val offscreenBitmap = Bitmap.createBitmap(
                     GlobalConfig.SCREEN_WIDTH,
                     GlobalConfig.SCREEN_HEIGHT,
                     Bitmap.Config.ARGB_8888
-                ).apply {
-                        val canvas = Canvas(this)
-                        canvas.drawColor(GlobalConfig.backgroundColor)
-                }
+                )
                 val offscreenCanvas = Canvas(offscreenBitmap)
 
                 lineDraw.forEach {
@@ -190,6 +192,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 myLines.add(MyLine(data.getPoints(), null, data.paint))
                 mStrokesCanvas?.drawPath(data.toPath(), data.paint.toPaint())
             }
+
             WriteCommand.ERASER_ACCELERATE -> {
                 val obj = msg.obj as? EraseData ?: return true
                 val data: EraseData = obj
@@ -244,11 +247,15 @@ class WriteBoardController(private val context:Context, private val callBack: ()
     }
 
     fun saveWhiteboard(lines: (MyLines) -> Unit) {
+        mHandler.obtainMessage(WriteCommand.CLEAN).sendToTarget()
         lines(MyLines(myLines, GlobalConfig.backgroundColor, 123, 1))
-        clear()
     }
 
     private fun clear() {
+        GlobalConfig.backgroundBitmap.apply {
+            val canvas = Canvas(this)
+            canvas.drawColor(-0xffa6b0)
+        }
         mStrokesBitmap = null
         mStrokesCanvas = null
         GlobalConfig.backgroundColor = context.getColor(R.color.whiteboard)
