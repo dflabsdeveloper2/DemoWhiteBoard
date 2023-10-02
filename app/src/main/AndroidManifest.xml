@@ -2,10 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <application
@@ -18,6 +17,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DemoWhiteBoard"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.DialogSaveWhiteboard"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.Dialog"/>
+        <activity
+            android:name=".ui.DialogFilemanager"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.Dialog"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">

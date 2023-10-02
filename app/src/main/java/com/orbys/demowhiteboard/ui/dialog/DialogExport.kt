@@ -56,7 +56,7 @@ class DialogExport(context: Context, private val whiteboard: WriteBoard):Dialog(
 
             if(nameFile.isNotBlank() && folderName.isNotBlank()){
                 try {
-
+                    //TODO: Falta programar lo de solo la pagina actual o todas
                     val whiteboardBitmap = Bitmap.createBitmap(
                         whiteboard.width,
                         whiteboard.height,

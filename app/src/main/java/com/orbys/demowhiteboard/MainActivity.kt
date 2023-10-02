@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.model.MyLines
+import com.orbys.demowhiteboard.ui.DialogSaveWhiteboard
 import com.orbys.demowhiteboard.ui.core.Util
 import com.orbys.demowhiteboard.ui.dialog.DialogClose
 import com.orbys.demowhiteboard.ui.dialog.DialogExport
@@ -232,6 +233,12 @@ class MainActivity : AppCompatActivity() {
             //TODO: Dialogo preguntar guardar antes de crear uno nuevo
             binding.whiteboard.clean()
             binding.llMenu.isVisible = false
+        }
+
+        binding.tvSave.setOnClickListener {
+            val intentDialogSaveWhiteboard = Intent(this,DialogSaveWhiteboard::class.java)
+            intentDialogSaveWhiteboard.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intentDialogSaveWhiteboard)
         }
     }
 
