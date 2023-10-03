@@ -4,10 +4,13 @@ import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.RectF
 
+
+data class MyWhiteboard(var lines:MutableList<MyLines>)
+
 data class MyLines(
     var listLines: List<MyLine>,
     var backgroundWallpaper:String?,
-    var backgroundColor: Int,
+    var backgroundColor: Int?,
     var video: Int,
     var page: Int
 )

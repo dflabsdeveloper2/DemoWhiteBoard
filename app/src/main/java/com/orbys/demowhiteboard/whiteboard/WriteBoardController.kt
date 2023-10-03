@@ -9,7 +9,6 @@ import android.os.Message
 import android.util.Log
 import android.widget.Toast
 import com.orbys.demowhiteboard.GlobalConfig
-import com.orbys.demowhiteboard.R
 import com.orbys.demowhiteboard.drawline.AccelerateDrawLineActor
 import com.orbys.demowhiteboard.drawline.DrawLineActor
 import com.orbys.demowhiteboard.drawline.LineData
@@ -145,30 +144,33 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
                 GlobalConfig.backgroundWallpaper = obj.backgroundWallpaper
                 GlobalConfig.backgroundColor = obj.backgroundColor
+                GlobalConfig.page = obj.page
 
                 val lineDraw = obj.listLines
 
                 val bitmapWallpaper =
                     GlobalConfig.backgroundWallpaper?.let { Util.createBitmapFromBase64String(it) }
-                if (bitmapWallpaper != null) {
-                    //establecer bitmap wallpaper
-                    GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
-                        GlobalConfig.SCREEN_WIDTH,
-                        GlobalConfig.SCREEN_HEIGHT,
-                        Bitmap.Config.ARGB_8888
-                    ).apply {
+
+
+                //establecer bitmap wallpaper
+                GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
+                    GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
+                    Bitmap.Config.ARGB_8888
+                ).apply {
+                    if (bitmapWallpaper != null) {
                         val canvas = Canvas(this)
                         canvas.scale(
                             width.toFloat() / bitmapWallpaper.width,
                             height.toFloat() / bitmapWallpaper.height
                         )
                         canvas.drawBitmap(bitmapWallpaper, 0f, 0f, null)
-                    }
-                } else {
-                    //establecer color background
-                    GlobalConfig.backgroundBitmap.apply {
+                    } else {
                         val canvas = Canvas(this)
-                        canvas.drawColor(GlobalConfig.backgroundColor)
+                        if (GlobalConfig.backgroundColor != null) {
+                            canvas.drawColor(GlobalConfig.backgroundColor!!)
+                        } else {
+                            canvas.drawColor(GlobalConfig.defaultBackgroundColor)
+                        }
                     }
                 }
 
@@ -270,26 +272,30 @@ class WriteBoardController(private val context:Context, private val callBack: ()
     }
 
     fun saveWhiteboard(lines: (MyLines) -> Unit) {
-        mHandler.obtainMessage(WriteCommand.CLEAN).sendToTarget()
         lines(
             MyLines(
                 myLines,
                 GlobalConfig.backgroundWallpaper,
                 GlobalConfig.backgroundColor,
                 123,
-                1
+                GlobalConfig.page
             )
         )
+        mHandler.obtainMessage(WriteCommand.CLEAN).sendToTarget()
     }
 
     private fun clear() {
-        GlobalConfig.backgroundBitmap.apply {
+        GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
+            GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
+            Bitmap.Config.ARGB_8888
+        ).apply {
             val canvas = Canvas(this)
-            canvas.drawColor(-0xffa6b0)
+            canvas.drawColor(GlobalConfig.defaultBackgroundColor)
         }
         mStrokesBitmap = null
         mStrokesCanvas = null
-        GlobalConfig.backgroundColor = context.getColor(R.color.whiteboard)
+        GlobalConfig.backgroundWallpaper = null
+        GlobalConfig.backgroundColor = null
         myLines = mutableListOf()
         myUndoLines = mutableListOf()
         myLinesHistory = mutableListOf()

@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
-import com.orbys.demowhiteboard.model.MyLines
+import com.orbys.demowhiteboard.model.MyWhiteboard
 import com.orbys.demowhiteboard.ui.DialogImagesBackground
 import com.orbys.demowhiteboard.ui.DialogSaveWhiteboard
 import com.orbys.demowhiteboard.ui.core.Util
@@ -31,7 +31,9 @@ import java.io.FileWriter
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
-    private lateinit var lines: MyLines
+    private lateinit var myWhiteboard: MyWhiteboard
+
+    private var totalPages = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,18 +55,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initUI() {
+        initValues()
         initListenners()
         initListennersMenu()
     }
 
-    private fun initListenners() {
-       /* binding.btnDraw.setOnClickListener {
-            GlobalConfig.sMode = 0
-        }
+    private fun initValues() {
 
-        binding.btnEraser.setOnClickListener {
-            GlobalConfig.sMode = 1
-        }*/
+        binding.tvCurrentPage.text = GlobalConfig.page.toString()
+        binding.tvTotalPage.text = totalPages.toString()
+
+        val files = File(filesDir.absolutePath).listFiles()?.toList()
+        if (!files.isNullOrEmpty()) {
+            files.forEach {
+                it.delete()
+            }
+        }
+    }
+
+    private fun initListenners() {
+        /* binding.btnDraw.setOnClickListener {
+             GlobalConfig.sMode = 0
+         }
+
+         binding.btnEraser.setOnClickListener {
+             GlobalConfig.sMode = 1
+         }*/
 
         binding.orbysMenu.setOnClickListener {
             binding.llMenu.isVisible = !binding.llMenu.isVisible
@@ -74,12 +90,15 @@ class MainActivity : AppCompatActivity() {
            Util.initDialogColor(this){ colorSelected ->
                GlobalConfig.backgroundWallpaper = null
                GlobalConfig.backgroundColor = colorSelected
+
                GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
                    GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
                    Bitmap.Config.ARGB_8888
                ).apply {
-                   val canvas = Canvas(this)
-                   canvas.drawColor(GlobalConfig.backgroundColor)
+                   GlobalConfig.backgroundColor?.let {
+                       val canvas = Canvas(this)
+                       canvas.drawColor(it)
+                   }
                }
 
                binding.whiteboard.invalidate()
@@ -153,6 +172,12 @@ class MainActivity : AppCompatActivity() {
             binding.whiteboard.apply {
                 clean()
             }
+            totalPages = 1
+            GlobalConfig.page = 1
+            myWhiteboard = MyWhiteboard(mutableListOf())
+
+            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+            binding.tvTotalPage.text = totalPages.toString()
         }
 
         binding.btnPropsPencil.setOnClickListener {
@@ -164,37 +189,61 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnSave.setOnClickListener {
-            //binding.whiteboard.debugCall()
-            binding.whiteboard.saveCall {
-                lines = it
 
-                val gson = Gson()
-                val json = gson.toJson(it)
-                writeJsonToInternalFile(json)
+            binding.whiteboard.apply {
+                saveCall { myLine ->
+                    if (::myWhiteboard.isInitialized) {
+                        if (myWhiteboard.lines.none { it.page == myLine.page }) {
+                            myWhiteboard.lines.add(myLine)
+                        } else {
+                            myWhiteboard.lines.removeAll { it.page == myLine.page }
+                            myWhiteboard.lines.add(myLine)
+                        }
+                    } else {
+                        myWhiteboard = MyWhiteboard(lines = mutableListOf())
+                        myWhiteboard.lines.add(myLine)
+                    }
+                }
             }
+
+            val gson = Gson()
+            val json = gson.toJson(myWhiteboard)
+            writeJsonToInternalFile(json)
+
+            totalPages = 1
+            GlobalConfig.page = 1
+            myWhiteboard = MyWhiteboard(mutableListOf())
+
+            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+            binding.tvTotalPage.text = totalPages.toString()
         }
 
         binding.btnOpen.setOnClickListener {
-            if (::lines.isInitialized) {
-                binding.whiteboard.drawSavedJson(lines)
-            } else {
-                val file = File(filesDir, "prueba")
+            GlobalConfig.page = 1
+            totalPages = 1
+            myWhiteboard = MyWhiteboard(lines = mutableListOf())
 
-                try {
-                    // Check if the file exists
-                    if (file.exists()) {
-                        // Read the JSON file
-                        val gson = Gson()
-                        val fileReader = FileReader(file)
-                        val myDataClass = gson.fromJson(fileReader, MyLines::class.java)
-                        binding.whiteboard.drawSavedJson(myDataClass)
-                    } else {
-                        Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+            val file = File(filesDir, "prueba")
+
+            try {
+                // Check if the file exists
+                if (file.exists()) {
+                    // Read the JSON file
+                    val gson = Gson()
+                    val fileReader = FileReader(file)
+                    val myDataClass = gson.fromJson(fileReader, MyWhiteboard::class.java)
+                    binding.whiteboard.drawSavedJson(myDataClass.lines.first { it.page == 1 })
+                    myWhiteboard = myDataClass
+                    totalPages = myWhiteboard.lines.maxOf { it.page }
+                } else {
+                    Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT).show()
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
+
+            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+            binding.tvTotalPage.text = totalPages.toString()
         }
 
         binding.btnRedo.setOnClickListener {
@@ -207,15 +256,100 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnExport.setOnClickListener {
 
-            val dir = File(Environment.getExternalStorageDirectory(),"Picture/ORBYS_Whiteboard")
-            if(!dir.exists()){
+            val dir = File(Environment.getExternalStorageDirectory(), "Picture/ORBYS_Whiteboard")
+            if (!dir.exists()) {
                 val d = dir.mkdirs()
-                Log.d("EXPORT","creado dir $d")
+                Log.d("EXPORT", "creado dir $d")
             }
 
-            val dialogExport = DialogExport(this,binding.whiteboard)
+            val dialogExport = DialogExport(this, binding.whiteboard)
             dialogExport.setCancelable(false)
             dialogExport.show()
+        }
+
+        binding.btnAddWhiteboard.setOnClickListener {
+
+            if (totalPages == GlobalConfig.LIMIT_PAGES) {
+                Toast.makeText(this, "Maximo numero de paginas", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            totalPages++
+
+            binding.whiteboard.apply {
+                saveCall { myLine ->
+                    if (::myWhiteboard.isInitialized) {
+                        if (myWhiteboard.lines.none { it.page == myLine.page }) {
+                            myWhiteboard.lines.add(myLine)
+                        } else {
+                            myWhiteboard.lines.removeAll { it.page == myLine.page }
+                            myWhiteboard.lines.add(myLine)
+                        }
+                    } else {
+                        myWhiteboard = MyWhiteboard(lines = mutableListOf())
+                        myWhiteboard.lines.add(myLine)
+                    }
+                }
+            }
+
+            GlobalConfig.page = totalPages
+
+            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+            binding.tvTotalPage.text = totalPages.toString()
+        }
+
+        binding.btnPreviousWhiteboard.setOnClickListener {
+            if (GlobalConfig.page > 1) {
+                binding.whiteboard.apply {
+                    saveCall { myLine ->
+                        if (::myWhiteboard.isInitialized) {
+                            if (myWhiteboard.lines.none { it.page == myLine.page }) {
+                                myWhiteboard.lines.add(myLine)
+                            } else {
+                                myWhiteboard.lines.removeAll { it.page == myLine.page }
+                                myWhiteboard.lines.add(myLine)
+                            }
+                        } else {
+                            myWhiteboard = MyWhiteboard(lines = mutableListOf())
+                            myWhiteboard.lines.add(myLine)
+                        }
+                    }
+
+                    GlobalConfig.page--
+
+                    drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.page })
+                }
+
+                binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                binding.tvTotalPage.text = totalPages.toString()
+            }
+        }
+
+        binding.btnLaterWhiteboard.setOnClickListener {
+            if (GlobalConfig.page < totalPages) {
+                binding.whiteboard.apply {
+                    saveCall { myLine ->
+                        if (::myWhiteboard.isInitialized) {
+                            if (myWhiteboard.lines.none { it.page == myLine.page }) {
+                                myWhiteboard.lines.add(myLine)
+                            } else {
+                                myWhiteboard.lines.removeAll { it.page == myLine.page }
+                                myWhiteboard.lines.add(myLine)
+                            }
+                        } else {
+                            myWhiteboard = MyWhiteboard(lines = mutableListOf())
+                            myWhiteboard.lines.add(myLine)
+                        }
+                    }
+
+                    GlobalConfig.page++
+
+                    drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.page })
+                }
+
+                binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                binding.tvTotalPage.text = totalPages.toString()
+            }
         }
     }
 
@@ -236,8 +370,19 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvNew.setOnClickListener {
             //TODO: Dialogo preguntar guardar antes de crear uno nuevo
-            binding.whiteboard.clean()
+            binding.whiteboard.apply {
+                clean()
+            }
+            totalPages = 1
+            GlobalConfig.page = 1
+            myWhiteboard = MyWhiteboard(mutableListOf())
+
             binding.llMenu.isVisible = false
+
+            Log.d("PAGE", "page ${GlobalConfig.page} total $totalPages")
+
+            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+            binding.tvTotalPage.text = totalPages.toString()
         }
 
         binding.tvSave.setOnClickListener {
