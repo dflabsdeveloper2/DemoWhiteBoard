@@ -19,6 +19,7 @@ object GlobalConfig {
     const val SCREEN_HEIGHT = 2160
     const val SCREEN_WIDTH = 3840
     var backgroundColor = -0xffa6b0
+    var backgroundWallpaper:String?=null
 
 
     //VALORES PEN

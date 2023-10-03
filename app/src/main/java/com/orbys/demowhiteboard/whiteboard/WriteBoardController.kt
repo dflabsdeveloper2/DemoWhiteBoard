@@ -19,6 +19,7 @@ import com.orbys.demowhiteboard.eraser.EraserActor
 import com.orbys.demowhiteboard.model.MyLine
 import com.orbys.demowhiteboard.model.MyLines
 import com.orbys.demowhiteboard.model.MyPaint
+import com.orbys.demowhiteboard.ui.core.Util
 import com.skg.drawaccelerate.AccelerateManager
 
 class WriteBoardController(private val context:Context, private val callBack: () -> Unit) : Handler.Callback {
@@ -142,13 +143,35 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 Log.d("SAVE", "OPEN saved whiteboard")
                 val obj = msg.obj as? MyLines ?: return true
 
-                GlobalConfig.backgroundColor = obj.background
+                GlobalConfig.backgroundWallpaper = obj.backgroundWallpaper
+                GlobalConfig.backgroundColor = obj.backgroundColor
+
                 val lineDraw = obj.listLines
 
-                GlobalConfig.backgroundBitmap.apply {
-                    val canvas = Canvas(this)
-                    canvas.drawColor(GlobalConfig.backgroundColor)
+                val bitmapWallpaper =
+                    GlobalConfig.backgroundWallpaper?.let { Util.createBitmapFromBase64String(it) }
+                if (bitmapWallpaper != null) {
+                    //establecer bitmap wallpaper
+                    GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
+                        GlobalConfig.SCREEN_WIDTH,
+                        GlobalConfig.SCREEN_HEIGHT,
+                        Bitmap.Config.ARGB_8888
+                    ).apply {
+                        val canvas = Canvas(this)
+                        canvas.scale(
+                            width.toFloat() / bitmapWallpaper.width,
+                            height.toFloat() / bitmapWallpaper.height
+                        )
+                        canvas.drawBitmap(bitmapWallpaper, 0f, 0f, null)
+                    }
+                } else {
+                    //establecer color background
+                    GlobalConfig.backgroundBitmap.apply {
+                        val canvas = Canvas(this)
+                        canvas.drawColor(GlobalConfig.backgroundColor)
+                    }
                 }
+
 
                 val offscreenBitmap = Bitmap.createBitmap(
                     GlobalConfig.SCREEN_WIDTH,
@@ -248,7 +271,15 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
     fun saveWhiteboard(lines: (MyLines) -> Unit) {
         mHandler.obtainMessage(WriteCommand.CLEAN).sendToTarget()
-        lines(MyLines(myLines, GlobalConfig.backgroundColor, 123, 1))
+        lines(
+            MyLines(
+                myLines,
+                GlobalConfig.backgroundWallpaper,
+                GlobalConfig.backgroundColor,
+                123,
+                1
+            )
+        )
     }
 
     private fun clear() {

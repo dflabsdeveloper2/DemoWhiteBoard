@@ -1,11 +1,11 @@
 package com.orbys.demowhiteboard
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -13,19 +13,16 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.model.MyLines
+import com.orbys.demowhiteboard.ui.DialogImagesBackground
 import com.orbys.demowhiteboard.ui.DialogSaveWhiteboard
 import com.orbys.demowhiteboard.ui.core.Util
 import com.orbys.demowhiteboard.ui.dialog.DialogClose
 import com.orbys.demowhiteboard.ui.dialog.DialogExport
 import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.skg.drawaccelerate.AccelerateManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -33,8 +30,6 @@ import java.io.FileWriter
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-
-    private val REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 1234
 
     private lateinit var lines: MyLines
 
@@ -46,6 +41,15 @@ class MainActivity : AppCompatActivity() {
         AccelerateManager.instance.onCreate()
 
         initUI()
+
+        val intentFilter = IntentFilter("action.whiteboard")
+        registerReceiver(receiver,intentFilter)
+    }
+
+    private val receiver:BroadcastReceiver = object :BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            binding.whiteboard.invalidate()
+        }
     }
 
     private fun initUI() {
@@ -68,6 +72,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnBackground.setOnClickListener {
            Util.initDialogColor(this){ colorSelected ->
+               GlobalConfig.backgroundWallpaper = null
                GlobalConfig.backgroundColor = colorSelected
                GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
                    GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
@@ -95,7 +100,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnImageBackground.setOnClickListener {
 
-            lifecycleScope.launch {
+            val intentDialogImages = Intent(this,DialogImagesBackground::class.java)
+            intentDialogImages.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intentDialogImages)
+
+            /*lifecycleScope.launch {
                 binding.pbLoading.isVisible = true
 
                 val bitmap: Bitmap = withContext(Dispatchers.IO) {
@@ -137,7 +146,7 @@ class MainActivity : AppCompatActivity() {
 
                 binding.whiteboard.invalidate()
                 binding.pbLoading.isVisible = false
-            }
+            }*/
         }
 
         binding.btnClear.setOnClickListener {
@@ -278,6 +287,8 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         AccelerateManager.instance.onDestroy()
+
+        unregisterReceiver(receiver)
     }
 
     override fun onBackPressed() {

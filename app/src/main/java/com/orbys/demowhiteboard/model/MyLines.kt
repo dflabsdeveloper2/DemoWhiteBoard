@@ -6,7 +6,8 @@ import android.graphics.RectF
 
 data class MyLines(
     var listLines: List<MyLine>,
-    var background: Int,
+    var backgroundWallpaper:String?,
+    var backgroundColor: Int,
     var video: Int,
     var page: Int
 )
