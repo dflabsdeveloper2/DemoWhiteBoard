@@ -1,5 +1,6 @@
 package com.orbys.demowhiteboard
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -357,7 +358,9 @@ class MainActivity : AppCompatActivity() {
         binding.tvClose.setOnClickListener {
             //TODO: Dialogo preguntar guardar antes de cerrar
 
-            val dialogClose = DialogClose(this,this)
+            val dialogClose = DialogClose(this){
+                finish()
+            }
             dialogClose.setCancelable(false)
             dialogClose.show()
         }
@@ -439,7 +442,9 @@ class MainActivity : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
 
-        val dialogClose = DialogClose(this,this)
+        val dialogClose = DialogClose(this){
+            finish()
+        }
         dialogClose.setCancelable(false)
         dialogClose.show()
     }

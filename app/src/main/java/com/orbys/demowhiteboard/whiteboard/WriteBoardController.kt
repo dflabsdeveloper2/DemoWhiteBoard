@@ -213,7 +213,6 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             WriteCommand.DRAW_LINE_ACCELERATE -> {
                 val obj = msg.obj as? LineData ?: return true
                 val data: LineData = obj
-                Log.d(TAG, "data: ${data.getPoints()}")
                 myLines.add(MyLine(data.getPoints(), null, data.paint))
                 mStrokesCanvas?.drawPath(data.toPath(), data.paint.toPaint())
             }
@@ -224,7 +223,6 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 myLines.add(MyLine(null, data.regions, mEraserPaint))
                 for (region in data.regions) {
                     if (region != null) {
-                        Log.d(TAG, "region: $region")
                         mStrokesCanvas?.drawRect(region, mEraserPaint.toPaint())
                     }
                 }

@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import com.orbys.demowhiteboard.databinding.DialogCloseBinding
 
-class DialogClose(context: Context,private val activity: Activity):Dialog(context) {
+class DialogClose(context: Context,private val finish:()->Unit):Dialog(context) {
 
     private lateinit var binding: DialogCloseBinding
 
@@ -20,7 +20,8 @@ class DialogClose(context: Context,private val activity: Activity):Dialog(contex
         }
 
         binding.btnClose.setOnClickListener {
-            activity.finish()
+            finish()
+            dismiss()
         }
     }
 }

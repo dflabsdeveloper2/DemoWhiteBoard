@@ -10,7 +10,7 @@ import com.orbys.demowhiteboard.GlobalConfig
 import com.orbys.demowhiteboard.databinding.DialogStylePenBinding
 import com.orbys.demowhiteboard.ui.core.Util
 
-class DialogPropsPen(context: Context, val finish:()->Unit) : Dialog(context) {
+class DialogPropsPen(context: Context,private val finish:()->Unit) : Dialog(context) {
 
     private lateinit var binding: DialogStylePenBinding
 
