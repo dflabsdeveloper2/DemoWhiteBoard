@@ -157,15 +157,15 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                     GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
                     Bitmap.Config.ARGB_8888
                 ).apply {
+                    val canvas = Canvas(this)
                     if (bitmapWallpaper != null) {
-                        val canvas = Canvas(this)
                         canvas.scale(
                             width.toFloat() / bitmapWallpaper.width,
                             height.toFloat() / bitmapWallpaper.height
                         )
                         canvas.drawBitmap(bitmapWallpaper, 0f, 0f, null)
                     } else {
-                        val canvas = Canvas(this)
+
                         if (GlobalConfig.backgroundColor != null) {
                             canvas.drawColor(GlobalConfig.backgroundColor!!)
                         } else {

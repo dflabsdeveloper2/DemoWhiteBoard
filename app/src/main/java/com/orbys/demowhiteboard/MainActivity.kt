@@ -1,19 +1,22 @@
 package com.orbys.demowhiteboard
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.model.MyWhiteboard
@@ -24,6 +27,9 @@ import com.orbys.demowhiteboard.ui.dialog.DialogClose
 import com.orbys.demowhiteboard.ui.dialog.DialogExport
 import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.skg.drawaccelerate.AccelerateManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -33,6 +39,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var myWhiteboard: MyWhiteboard
+    private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
+
 
     private var totalPages = 1
 
@@ -44,9 +52,6 @@ class MainActivity : AppCompatActivity() {
         AccelerateManager.instance.onCreate()
 
         initUI()
-
-        val intentFilter = IntentFilter("action.whiteboard")
-        registerReceiver(receiver,intentFilter)
     }
 
     private val receiver:BroadcastReceiver = object :BroadcastReceiver(){
@@ -59,6 +64,8 @@ class MainActivity : AppCompatActivity() {
         initValues()
         initListenners()
         initListennersMenu()
+        getDataResultActivities()
+        registerLocalBroadcast()
     }
 
     private fun initValues() {
@@ -119,54 +126,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnImageBackground.setOnClickListener {
-
             val intentDialogImages = Intent(this,DialogImagesBackground::class.java)
-            intentDialogImages.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intentDialogImages)
-
-            /*lifecycleScope.launch {
-                binding.pbLoading.isVisible = true
-
-                val bitmap: Bitmap = withContext(Dispatchers.IO) {
-                    BitmapFactory.decodeResource(
-                        this@MainActivity.resources,
-                        R.drawable.backgroundimagepaisaje
-                    )
-                }
-
-                GlobalConfig.backgroundBitmap.apply {
-                    val canvas = Canvas(this)
-
-                    val bitmapWidth = bitmap.width
-                    val bitmapHeight = bitmap.height
-                    val canvasWidth = canvas.width
-                    val canvasHeight = canvas.height
-
-                    // Calcula las escalas para ajustar el bitmap al canvas con centerInside
-                    val scale = minOf(
-                        canvasWidth.toFloat() / bitmapWidth,
-                        canvasHeight.toFloat() / bitmapHeight
-                    )
-
-                    // Calcula las nuevas dimensiones del bitmap
-                    val newBitmapWidth = (bitmapWidth * scale).toInt()
-                    val newBitmapHeight = (bitmapHeight * scale).toInt()
-
-                    // Calcula las coordenadas para centrar el bitmap en el canvas
-                    val left = (canvasWidth - newBitmapWidth) / 2
-                    val top = (canvasHeight - newBitmapHeight) / 2
-
-                    // Crea un rectángulo para el destino
-                    val destRect = Rect(left, top, left + newBitmapWidth, top + newBitmapHeight)
-
-
-                    // Dibuja el bitmap en el canvas con el nuevo tamaño y posición
-                    canvas.drawBitmap(bitmap, null, destRect, Paint())
-                }
-
-                binding.whiteboard.invalidate()
-                binding.pbLoading.isVisible = false
-            }*/
+            someActivityResultLauncher.launch(intentDialogImages)
         }
 
         binding.btnClear.setOnClickListener {
@@ -447,5 +408,54 @@ class MainActivity : AppCompatActivity() {
         }
         dialogClose.setCancelable(false)
         dialogClose.show()
+    }
+
+    private fun registerLocalBroadcast() {
+        val intentFilter = IntentFilter("action.whiteboard")
+        registerReceiver(receiver, intentFilter)
+    }
+
+    private fun getDataResultActivities() {
+        someActivityResultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                Log.d("IMAGE", "recupero  $result")
+
+                //Dialog Wallpaper
+                if (result.resultCode == DialogImagesBackground.RESULT_CODE_DIALOG_WALLPAPER) {
+                    // El código de resultado está OK, puedes procesar los datos recibidos aquí
+                    val data: Intent? = result.data
+                    val dataString = data?.getStringExtra("fileWallpaper").orEmpty()
+                    Log.d("IMAGE", "recupero  $dataString")
+                    if (dataString.isEmpty()) return@registerForActivityResult
+
+                    binding.pbLoading.isVisible = true
+
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val bitmap = BitmapFactory.decodeFile(dataString)
+                        GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
+                            GlobalConfig.SCREEN_WIDTH,
+                            GlobalConfig.SCREEN_HEIGHT,
+                            Bitmap.Config.ARGB_8888
+                        ).apply {
+                            val canvas = Canvas(this)
+                            canvas.scale(
+                                width.toFloat() / bitmap.width,
+                                height.toFloat() / bitmap.height
+                            )
+                            canvas.drawBitmap(bitmap, 0f, 0f, null)
+                        }
+
+                        GlobalConfig.backgroundWallpaper = Util.createBitmapToBase64String(bitmap)
+                        //sendBroadcast(Intent("action.whiteboard"))
+
+                        withContext(Dispatchers.Main) {
+                            binding.whiteboard.invalidate()
+                            binding.pbLoading.isVisible = false
+                        }
+                    }
+                }
+
+
+            }
     }
 }

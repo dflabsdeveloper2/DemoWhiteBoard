@@ -1,18 +1,13 @@
 package com.orbys.demowhiteboard.ui
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
-import com.orbys.demowhiteboard.GlobalConfig
 import com.orbys.demowhiteboard.databinding.ActivityDialogImagesBackgroundBinding
 import com.orbys.demowhiteboard.ui.adapter.AdapterImagesBackground
-import com.orbys.demowhiteboard.ui.core.Util
 import java.io.File
 
 class DialogImagesBackground : AppCompatActivity() {
@@ -21,6 +16,10 @@ class DialogImagesBackground : AppCompatActivity() {
     private lateinit var adapterImagesBackround: AdapterImagesBackground
 
     private val dirName = "ORBYS/Wallpaper"
+
+    companion object {
+        const val RESULT_CODE_DIALOG_WALLPAPER = 123 // Código de resultado personalizado
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,57 +46,16 @@ class DialogImagesBackground : AppCompatActivity() {
         }
     }
 
-
     //TODO: loading hasta que se cargen las imagenes
     private fun initRecicler() {
         val files = File(Environment.getExternalStorageDirectory(),dirName).listFiles()?.toList()
 
         if(!files.isNullOrEmpty()){
             adapterImagesBackround = AdapterImagesBackground(filterImages(files)){
-                val bitmap = BitmapFactory.decodeFile(it.path)
-
-                GlobalConfig.backgroundBitmap = Bitmap.createBitmap(GlobalConfig.SCREEN_WIDTH,GlobalConfig.SCREEN_HEIGHT,Bitmap.Config.ARGB_8888).apply {
-                    val canvas = Canvas(this)
-                    canvas.scale(width.toFloat() / bitmap.width, height.toFloat() / bitmap.height)
-                    canvas.drawBitmap(bitmap, 0f, 0f, null)
-                }
-
-                /*
-                TODO: ajustar al centro manteniendo proporciones imagen
-                GlobalConfig.backgroundBitmap.apply {
-                    val canvas = Canvas(this)
-                    canvas.drawBitmap(bitmap,0f,0f,null)
-
-                    val bitmapWidth = bitmap.width
-                    val bitmapHeight = bitmap.height
-                    val canvasWidth = canvas.width
-                    val canvasHeight = canvas.height
-
-                    // Calcula las escalas para ajustar el bitmap al canvas con centerInside
-                    val scale = minOf(
-                        canvasWidth.toFloat() / bitmapWidth,
-                        canvasHeight.toFloat() / bitmapHeight
-                    )
-
-                    // Calcula las nuevas dimensiones del bitmap
-                    val newBitmapWidth = (bitmapWidth * scale).toInt()
-                    val newBitmapHeight = (bitmapHeight * scale).toInt()
-
-                    // Calcula las coordenadas para centrar el bitmap en el canvas
-                    val left = (canvasWidth - newBitmapWidth) / 2
-                    val top = (canvasHeight - newBitmapHeight) / 2
-
-                    // Crea un rectángulo para el destino
-                    val destRect = Rect(left, top, left + newBitmapWidth, top + newBitmapHeight)
-
-                    // Dibuja el bitmap en el canvas con el nuevo tamaño y posición
-                    canvas.drawBitmap(bitmap, null, destRect, Paint())
-                }*/
-
-                sendBroadcast(Intent("action.whiteboard"))
-
-                GlobalConfig.backgroundWallpaper = Util.createBitmapToBase64String(bitmap)
-
+                val intentData = Intent()
+                intentData.putExtra("fileWallpaper", it.path.toString())
+                setResult(RESULT_CODE_DIALOG_WALLPAPER,intentData)
+                Log.d("IMAGE","finish")
                 finish()
             }
 
@@ -119,3 +77,35 @@ class DialogImagesBackground : AppCompatActivity() {
             .filter { it.length() <= 5000000 }
     }
 }
+
+/*
+                        TODO: ajustar al centro manteniendo proporciones imagen
+                        GlobalConfig.backgroundBitmap.apply {
+                            val canvas = Canvas(this)
+                            canvas.drawBitmap(bitmap,0f,0f,null)
+
+                            val bitmapWidth = bitmap.width
+                            val bitmapHeight = bitmap.height
+                            val canvasWidth = canvas.width
+                            val canvasHeight = canvas.height
+
+                            // Calcula las escalas para ajustar el bitmap al canvas con centerInside
+                            val scale = minOf(
+                                canvasWidth.toFloat() / bitmapWidth,
+                                canvasHeight.toFloat() / bitmapHeight
+                            )
+
+                            // Calcula las nuevas dimensiones del bitmap
+                            val newBitmapWidth = (bitmapWidth * scale).toInt()
+                            val newBitmapHeight = (bitmapHeight * scale).toInt()
+
+                            // Calcula las coordenadas para centrar el bitmap en el canvas
+                            val left = (canvasWidth - newBitmapWidth) / 2
+                            val top = (canvasHeight - newBitmapHeight) / 2
+
+                            // Crea un rectángulo para el destino
+                            val destRect = Rect(left, top, left + newBitmapWidth, top + newBitmapHeight)
+
+                            // Dibuja el bitmap en el canvas con el nuevo tamaño y posición
+                            canvas.drawBitmap(bitmap, null, destRect, Paint())
+                        }*/
