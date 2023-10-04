@@ -10,6 +10,7 @@ import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -51,7 +52,32 @@ class MainActivity : AppCompatActivity() {
 
         AccelerateManager.instance.onCreate()
 
-        initUI()
+        if (checkPermission()) {
+            initUI()
+        } else {
+            requestPermission()
+        }
+    }
+
+    private fun checkPermission(): Boolean = Environment.isExternalStorageManager()
+
+    private fun requestPermission() {
+        Log.d("PERMISSION", "request permission")
+
+        Toast.makeText(this, "Son necesarios los permisos", Toast.LENGTH_SHORT).show()
+        try {
+            val intent = Intent()
+            intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+            val uri = Uri.fromParts("package", this.packageName, null)
+            intent.data = uri
+            startActivity(intent)
+            finish()
+        } catch (e: Exception) {
+            val intent = Intent()
+            intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+            startActivity(intent)
+            finish()
+        }
     }
 
     private val receiver: BroadcastReceiver = object : BroadcastReceiver() {

@@ -5,11 +5,11 @@ plugins {
 
 android {
     namespace = "com.orbys.demowhiteboard"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.orbys.demowhiteboard"
-        minSdk = 26
+        minSdk = 33
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
