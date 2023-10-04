@@ -27,6 +27,7 @@ import com.orbys.demowhiteboard.ui.DialogSaveWhiteboard
 import com.orbys.demowhiteboard.ui.core.Util
 import com.orbys.demowhiteboard.ui.dialog.DialogClose
 import com.orbys.demowhiteboard.ui.dialog.DialogExport
+import com.orbys.demowhiteboard.ui.dialog.DialogNewWhiteboard
 import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.skg.drawaccelerate.AccelerateManager
 import kotlinx.coroutines.Dispatchers
@@ -316,19 +317,31 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvNew.setOnClickListener {
             //TODO: Dialogo preguntar guardar antes de crear uno nuevo
-            binding.whiteboard.apply {
-                clean()
+            val dialogNew = DialogNewWhiteboard(this) {
+                //true -> new  false -> save whiteboard
+                if (it) {
+                    binding.whiteboard.apply {
+                        clean()
+                    }
+                    totalPages = 1
+                    GlobalConfig.page = 1
+                    myWhiteboard = MyWhiteboard(mutableListOf())
+
+                    binding.llMenu.isVisible = false
+
+                    Log.d("PAGE", "page ${GlobalConfig.page} total $totalPages")
+
+                    binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                    binding.tvTotalPage.text = totalPages.toString()
+                } else {
+                    val intentSave = Intent(this, DialogSaveWhiteboard::class.java)
+                    someActivityResultLauncher.launch(intentSave)
+
+                    binding.llMenu.isVisible = false
+                }
             }
-            totalPages = 1
-            GlobalConfig.page = 1
-            myWhiteboard = MyWhiteboard(mutableListOf())
 
-            binding.llMenu.isVisible = false
-
-            Log.d("PAGE", "page ${GlobalConfig.page} total $totalPages")
-
-            binding.tvCurrentPage.text = GlobalConfig.page.toString()
-            binding.tvTotalPage.text = totalPages.toString()
+            dialogNew.show()
         }
 
         binding.tvSave.setOnClickListener {
@@ -342,6 +355,8 @@ class MainActivity : AppCompatActivity() {
             val intentOpen = Intent(this,DialogFilemanager::class.java)
             intentOpen.putExtra("open",true)
             someActivityResultLauncher.launch(intentOpen)
+
+            binding.llMenu.isVisible = false
         }
     }
 

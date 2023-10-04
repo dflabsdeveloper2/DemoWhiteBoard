@@ -96,10 +96,6 @@ class DialogImagesBackground : AppCompatActivity() {
                 }
             }
         }
-
-
-
-
 }
 
 /*

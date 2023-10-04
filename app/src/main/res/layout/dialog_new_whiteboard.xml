@@ -2,49 +2,52 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="8dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="8dp">
 
     <TextView
-        android:id="@+id/tvTitle"
+        android:id="@+id/tvTitleNewWhiteBoard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Nombre de la nueva carpeta"
-        android:maxLength="30"
+        android:text="Nueva Pizarra"
         android:theme="@style/TitleDialogs"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintBottom_toTopOf="@id/tvMessageNewWhiteBoard"
+        />
 
-    <EditText
-        android:id="@+id/etNameFile"
+    <TextView
+        android:id="@+id/tvMessageNewWhiteBoard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:gravity="center"
+        android:theme="@style/BodyDialogs"
+        android:layout_margin="16dp"
+        android:text="¿Quieres guardar la pizarra actual antes de crear una nueva pizarra?"
+        app:layout_constraintTop_toBottomOf="@id/tvTitleNewWhiteBoard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        android:layout_marginHorizontal="32dp"/>
-
+        app:layout_constraintBottom_toTopOf="@id/btnNew"/>
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btnCancel"
+        android:id="@+id/btnNew"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@android:string/cancel"
+        android:text="Nueva"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etNameFile"
-        app:layout_constraintEnd_toStartOf="@id/btnCreate"
+        app:layout_constraintTop_toBottomOf="@id/tvMessageNewWhiteBoard"
+        app:layout_constraintEnd_toStartOf="@id/btnSave"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btnCreate"
+        android:id="@+id/btnSave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Crear"
-        app:layout_constraintStart_toEndOf="@id/btnCancel"
+        android:text="Guardar"
+        app:layout_constraintStart_toEndOf="@id/btnNew"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etNameFile"
+        app:layout_constraintTop_toTopOf="@id/btnNew"
         app:layout_constraintBottom_toBottomOf="parent"/>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
