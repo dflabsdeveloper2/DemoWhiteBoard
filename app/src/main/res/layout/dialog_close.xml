@@ -21,7 +21,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:theme="@style/bodyDialogs"
+        android:theme="@style/BodyDialogs"
        android:layout_margin="16dp"
         android:text="¿Estas seguro de querer cerrar la app?"
         app:layout_constraintTop_toBottomOf="@id/tvTitleClose"

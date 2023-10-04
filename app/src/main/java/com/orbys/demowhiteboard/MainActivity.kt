@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.model.MyWhiteboard
+import com.orbys.demowhiteboard.ui.DialogFilemanager
 import com.orbys.demowhiteboard.ui.DialogImagesBackground
 import com.orbys.demowhiteboard.ui.DialogSaveWhiteboard
 import com.orbys.demowhiteboard.ui.core.Util
@@ -182,31 +183,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnOpen.setOnClickListener {
-            GlobalConfig.page = 1
-            totalPages = 1
-            myWhiteboard = MyWhiteboard(lines = mutableListOf())
-
-            val file = File(filesDir, "prueba")
-
-            try {
-                // Check if the file exists
-                if (file.exists()) {
-                    // Read the JSON file
-                    val gson = Gson()
-                    val fileReader = FileReader(file)
-                    val myDataClass = gson.fromJson(fileReader, MyWhiteboard::class.java)
-                    binding.whiteboard.drawSavedJson(myDataClass.lines.first { it.page == 1 })
-                    myWhiteboard = myDataClass
-                    totalPages = myWhiteboard.lines.maxOf { it.page }
-                } else {
-                    Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-
-            binding.tvCurrentPage.text = GlobalConfig.page.toString()
-            binding.tvTotalPage.text = totalPages.toString()
+            val intentOpen = Intent(this,DialogFilemanager::class.java)
+            intentOpen.putExtra("open",true)
+            someActivityResultLauncher.launch(intentOpen)
         }
 
         binding.btnRedo.setOnClickListener {
@@ -331,6 +310,8 @@ class MainActivity : AppCompatActivity() {
             val dialogExport = DialogExport(this,binding.whiteboard)
             dialogExport.setCancelable(false)
             dialogExport.show()
+
+            binding.llMenu.isVisible = false
         }
 
         binding.tvNew.setOnClickListener {
@@ -353,6 +334,14 @@ class MainActivity : AppCompatActivity() {
         binding.tvSave.setOnClickListener {
             val intentSave = Intent(this, DialogSaveWhiteboard::class.java)
             someActivityResultLauncher.launch(intentSave)
+
+            binding.llMenu.isVisible = false
+        }
+
+        binding.tvOpen.setOnClickListener {
+            val intentOpen = Intent(this,DialogFilemanager::class.java)
+            intentOpen.putExtra("open",true)
+            someActivityResultLauncher.launch(intentOpen)
         }
     }
 
@@ -483,6 +472,37 @@ class MainActivity : AppCompatActivity() {
                         binding.tvTotalPage.text = totalPages.toString()
                         binding.pbLoading.isVisible = false
                     }
+                }
+
+                if(result.resultCode == DialogFilemanager.RESULT_CODE_DIALOG_FILEMANAGER_OPEN_FILE){
+                    val data: Intent? = result.data
+                    val dataString = data?.getStringExtra("fileOpen").orEmpty()
+
+                    GlobalConfig.page = 1
+                    totalPages = 1
+                    myWhiteboard = MyWhiteboard(lines = mutableListOf())
+
+                    val file = File(dataString)
+
+                    try {
+                        // Check if the file exists
+                        if (file.exists()) {
+                            // Read the JSON file
+                            val gson = Gson()
+                            val fileReader = FileReader(file)
+                            val myDataClass = gson.fromJson(fileReader, MyWhiteboard::class.java)
+                            binding.whiteboard.drawSavedJson(myDataClass.lines.first { it.page == 1 })
+                            myWhiteboard = myDataClass
+                            totalPages = myWhiteboard.lines.maxOf { it.page }
+                        } else {
+                            Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                    binding.tvTotalPage.text = totalPages.toString()
                 }
             }
     }

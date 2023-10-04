@@ -20,15 +20,15 @@
         <activity
             android:name=".ui.DialogImagesBackground"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.Dialog" />
+            android:theme="@style/DialogsCustom" />
         <activity
             android:name=".ui.DialogSaveWhiteboard"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.Dialog" />
+            android:theme="@style/DialogsCustom" />
         <activity
             android:name=".ui.DialogFilemanager"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.Dialog" />
+            android:theme="@style/DialogsCustom" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

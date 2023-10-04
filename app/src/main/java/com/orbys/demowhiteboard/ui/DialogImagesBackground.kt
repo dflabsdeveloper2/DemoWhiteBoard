@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.orbys.demowhiteboard.databinding.ActivityDialogImagesBackgroundBinding
@@ -68,7 +69,9 @@ class DialogImagesBackground : AppCompatActivity() {
 
     private fun initListenner() {
         binding.ivAddImage.setOnClickListener {
-
+            val intentOpen = Intent(this,DialogFilemanager::class.java)
+            intentOpen.putExtra("addImage",true)
+            someActivityResultLauncher.launch(intentOpen)
         }
     }
 
@@ -76,6 +79,27 @@ class DialogImagesBackground : AppCompatActivity() {
         return files.filter { it.isFile && it.name.endsWith(".jpg") || it.name.endsWith(".png") }
             .filter { it.length() <= 5000000 }
     }
+
+    private val someActivityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+
+            //Dialog Wallpaper
+            if (result.resultCode == DialogFilemanager.RESULT_CODE_DIALOG_FILEMANAGER_ADD_IMAGE) {
+                val data: Intent? = result.data
+                val dataString = data?.getStringExtra("image").orEmpty()
+                if (dataString.isNotBlank()) {
+                    val intentData = Intent()
+                    intentData.putExtra("fileWallpaper", dataString)
+                    setResult(RESULT_CODE_DIALOG_WALLPAPER,intentData)
+                    Log.d("IMAGE","finish")
+                    finish()
+                }
+            }
+        }
+
+
+
+
 }
 
 /*

@@ -14,8 +14,12 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <style name="bodyDialogs" parent="TitleDialogs">
+    <style name="BodyDialogs" parent="TitleDialogs">
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="DialogsCustom" parent="Theme.AppCompat.Light.Dialog">
+       <!-- <item name="windowNoTitle">true</item>-->
     </style>
 </resources>
