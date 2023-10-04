@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         initUI()
     }
 
-    private val receiver:BroadcastReceiver = object :BroadcastReceiver(){
+    private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             binding.whiteboard.invalidate()
         }
@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnWeb.setOnClickListener {
-            val url = "https://myclassbeta.orbys.eu/"
+            val url = com.orbys.demowhiteboard.core.Util.urlMyClass
 
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
 
@@ -151,33 +151,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnSave.setOnClickListener {
-
-            binding.whiteboard.apply {
-                saveCall { myLine ->
-                    if (::myWhiteboard.isInitialized) {
-                        if (myWhiteboard.lines.none { it.page == myLine.page }) {
-                            myWhiteboard.lines.add(myLine)
-                        } else {
-                            myWhiteboard.lines.removeAll { it.page == myLine.page }
-                            myWhiteboard.lines.add(myLine)
-                        }
-                    } else {
-                        myWhiteboard = MyWhiteboard(lines = mutableListOf())
-                        myWhiteboard.lines.add(myLine)
-                    }
-                }
-            }
-
-            val gson = Gson()
-            val json = gson.toJson(myWhiteboard)
-            writeJsonToInternalFile(json)
-
-            totalPages = 1
-            GlobalConfig.page = 1
-            myWhiteboard = MyWhiteboard(mutableListOf())
-
-            binding.tvCurrentPage.text = GlobalConfig.page.toString()
-            binding.tvTotalPage.text = totalPages.toString()
+            val intentSave = Intent(this, DialogSaveWhiteboard::class.java)
+            someActivityResultLauncher.launch(intentSave)
         }
 
         binding.btnOpen.setOnClickListener {
@@ -350,27 +325,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.tvSave.setOnClickListener {
-            val intentDialogSaveWhiteboard = Intent(this,DialogSaveWhiteboard::class.java)
-            intentDialogSaveWhiteboard.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intentDialogSaveWhiteboard)
+            val intentSave = Intent(this, DialogSaveWhiteboard::class.java)
+            someActivityResultLauncher.launch(intentSave)
         }
     }
 
-    private fun writeJsonToInternalFile(json: String) {
-        // Obtenemos el directorio de almacenamiento interno
-        val directory = filesDir
+    private fun writeJsonToInternalFile(json: String, fileSaved: File) {
+        try {
+            Log.d("SAVE", "writeJsonToInternalFile: ${fileSaved.absolutePath}")
 
-        // Creamos el fichero
-        val file = File(directory, "prueba")
-
-        // Abrimos el fichero para escritura
-        val writer = FileWriter(file)
-
-        // Escribimos el JSON en el fichero
-        writer.write(json)
-
-        // Cerramos el fichero
-        writer.close()
+            val f = FileWriter(fileSaved)
+            f.write(json)
+            f.close()
+        } catch (e: Exception) {
+            Log.d("SAVE", "Exception to save: $e")
+        }
     }
 
     override fun onStart() {
@@ -418,14 +387,12 @@ class MainActivity : AppCompatActivity() {
     private fun getDataResultActivities() {
         someActivityResultLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                Log.d("IMAGE", "recupero  $result")
 
                 //Dialog Wallpaper
                 if (result.resultCode == DialogImagesBackground.RESULT_CODE_DIALOG_WALLPAPER) {
                     // El código de resultado está OK, puedes procesar los datos recibidos aquí
                     val data: Intent? = result.data
                     val dataString = data?.getStringExtra("fileWallpaper").orEmpty()
-                    Log.d("IMAGE", "recupero  $dataString")
                     if (dataString.isEmpty()) return@registerForActivityResult
 
                     binding.pbLoading.isVisible = true
@@ -455,7 +422,42 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
+                if (result.resultCode == DialogSaveWhiteboard.RESULT_CODE_DIALOG_SAVE) {
+                    val data: Intent? = result.data
+                    val dataString = data?.getStringExtra("fileSave").orEmpty()
 
+                    if (dataString.isNotBlank()) {
+                        val file = File(dataString)
+                        Log.d("SAVE", "file: ${file.absolutePath}")
+                        binding.pbLoading.isVisible = true
+                        binding.whiteboard.saveCall { myLine ->
+                            if (::myWhiteboard.isInitialized) {
+                                if (myWhiteboard.lines.none { it.page == myLine.page }) {
+                                    myWhiteboard.lines.add(myLine)
+                                } else {
+                                    myWhiteboard.lines.removeAll { it.page == myLine.page }
+                                    myWhiteboard.lines.add(myLine)
+                                }
+                            } else {
+                                myWhiteboard = MyWhiteboard(lines = mutableListOf())
+                                myWhiteboard.lines.add(myLine)
+                            }
+                        }
+
+                        val gson = Gson()
+                        val json = gson.toJson(myWhiteboard)
+                        writeJsonToInternalFile(json, file)
+
+                        totalPages = 1
+                        GlobalConfig.page = 1
+                        myWhiteboard = MyWhiteboard(mutableListOf())
+
+
+                        binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                        binding.tvTotalPage.text = totalPages.toString()
+                        binding.pbLoading.isVisible = false
+                    }
+                }
             }
     }
 }

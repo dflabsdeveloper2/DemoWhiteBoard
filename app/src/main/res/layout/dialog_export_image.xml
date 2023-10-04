@@ -49,7 +49,6 @@
         android:id="@+id/etFolderFile"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="/Picture/ORBYS_Whiteboard"
         android:imeOptions="actionDone"
         android:maxLines="1"
         android:singleLine="true"

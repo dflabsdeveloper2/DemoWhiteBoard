@@ -16,6 +16,9 @@ class DialogFilemanager : AppCompatActivity() {
     private lateinit var adapterFiles: AdapterFiles
     private lateinit var currentPath: File
 
+    companion object {
+        const val RESULT_CODE_DIALOG_FILEMANAGER = 321 // Código de resultado personalizado
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,9 +87,9 @@ class DialogFilemanager : AppCompatActivity() {
         }
 
         binding.btnSelect.setOnClickListener {
-            val intentSaveWhiteboard = Intent(this,DialogSaveWhiteboard::class.java)
+            val intentSaveWhiteboard = Intent()
             intentSaveWhiteboard.putExtra("directory",currentPath.absolutePath)
-            startActivity(intentSaveWhiteboard)
+            setResult(RESULT_CODE_DIALOG_FILEMANAGER,intentSaveWhiteboard)
             finish()
         }
     }
