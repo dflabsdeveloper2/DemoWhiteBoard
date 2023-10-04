@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.orbys.demowhiteboard.databinding.ActivityDialogFilemanagerBinding
 import com.orbys.demowhiteboard.ui.adapter.AdapterFiles
+import com.orbys.demowhiteboard.ui.dialog.DialogExport
+import com.orbys.demowhiteboard.ui.dialog.DialogoNewFolder
 import java.io.File
 
 class DialogFilemanager : AppCompatActivity() {
@@ -77,13 +79,18 @@ class DialogFilemanager : AppCompatActivity() {
         }
 
         binding.btnCreateNewFolder.setOnClickListener {
-            val dir = File(currentPath.absolutePath,"nuevo")
-            val a = dir.mkdirs()
-            if(a){
-                if(dir.exists()){
-                    currentPath = dir
+
+            val dialogNewFolder = DialogoNewFolder(this){
+                val dir = File(currentPath.absolutePath,it)
+                val a = dir.mkdirs()
+                if(a){
+                    if(dir.exists()){
+                        currentPath = dir
+                    }
                 }
             }
+            dialogNewFolder.setCancelable(false)
+            dialogNewFolder.show()
         }
 
         binding.btnSelect.setOnClickListener {

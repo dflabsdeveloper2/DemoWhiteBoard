@@ -110,7 +110,11 @@ class DialogSaveWhiteboard : AppCompatActivity() {
                 if (dataString.isNotBlank()) {
                     fileToSave = File(dataString)
                     val nameFile = fileToSave?.name
-                    binding.etFolderFile.setText(nameFile)
+                    if(nameFile == Environment.getExternalStorageDirectory().name){
+                        binding.etFolderFile.setText("Local")
+                    }else{
+                        binding.etFolderFile.setText(nameFile)
+                    }
                 }
             }
         }
