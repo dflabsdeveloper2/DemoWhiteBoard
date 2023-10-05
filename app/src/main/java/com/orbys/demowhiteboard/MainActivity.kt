@@ -209,49 +209,7 @@ class MainActivity : AppCompatActivity() {
 
             val intentDialogExport = Intent(this, DialogExport::class.java)
             someActivityResultLauncher.launch(intentDialogExport)
-            /*val dir = File(Environment.getExternalStorageDirectory(), "Picture/ORBYS_Whiteboard")
-            if (!dir.exists()) {
-                val d = dir.mkdirs()
-                Log.d("EXPORT", "creado dir $d")
-            }
 
-            val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(binding.whiteboard)
-            myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
-
-            lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    myBitmapsFromWhiteboard.forEach { (page, whiteboard) ->
-                        Log.d("BITMAP", "page: $page whiteboard ${whiteboard.byteCount}")
-
-                        val fileExported =
-                            File(
-                                Environment.getExternalStorageDirectory(),
-                                "ORBYS/prueba-$page.png"
-                            )
-                        val fileOutputStream = FileOutputStream(fileExported)
-
-                        whiteboard.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
-                        fileOutputStream.close()
-                    }
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Imagen guardada en ORBYS",
-                            Toast.LENGTH_SHORT
-                        )
-                            .show()
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Error al exportar la imagen",
-                            Toast.LENGTH_SHORT
-                        )
-                            .show()
-                    }
-                }
-            }*/
             binding.pbLoading.isVisible = false
         }
 
@@ -370,8 +328,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.tvExport.setOnClickListener {
+            binding.pbLoading.isVisible = true
+
+            val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(binding.whiteboard)
+            myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+
             val intentDialogExport = Intent(this, DialogExport::class.java)
             someActivityResultLauncher.launch(intentDialogExport)
+
+            binding.pbLoading.isVisible = false
 
             binding.llMenu.isVisible = false
         }
