@@ -48,7 +48,10 @@ class DialogFilemanager : AppCompatActivity() {
 
         currentPath = File(Environment.getExternalStorageDirectory().absolutePath)
 
-        binding.tvPath.text = currentPath.path
+        binding.tvPath.text = currentPath.path.replace(
+            Environment.getExternalStorageDirectory().absolutePath,
+            "Local"
+        )
 
         binding.btnCreateNewFolder.isVisible = !openFileMode && !addImageMode
         binding.btnSelect.isVisible = !openFileMode && !addImageMode
@@ -93,6 +96,10 @@ class DialogFilemanager : AppCompatActivity() {
                 }
             }
             currentPath.listFiles()?.let { adapterFiles.updateList(it.toList()) }
+            binding.tvPath.text = currentPath.path.replace(
+                Environment.getExternalStorageDirectory().absolutePath,
+                "Local"
+            )
         }
     }
 
@@ -105,6 +112,12 @@ class DialogFilemanager : AppCompatActivity() {
                 } else {
                     currentPath
                 }
+
+            adapterFiles.updateList(currentPath.listFiles()?.toList().orEmpty())
+            binding.tvPath.text = currentPath.path.replace(
+                Environment.getExternalStorageDirectory().absolutePath,
+                "Local"
+            )
         }
 
         binding.ivClose.setOnClickListener {
@@ -116,10 +129,21 @@ class DialogFilemanager : AppCompatActivity() {
             val dialogNewFolder = DialogoNewFolder(this){
                 val dir = File(currentPath.absolutePath,it)
                 val a = dir.mkdirs()
-                if(a){
-                    if(dir.exists()){
+                if (a) {
+                    if (dir.exists()) {
                         currentPath = dir
+                        adapterFiles.updateList(currentPath.listFiles()?.toList().orEmpty())
+                        binding.tvPath.text = currentPath.path.replace(
+                            Environment.getExternalStorageDirectory().absolutePath,
+                            "Local"
+                        )
                     }
+                } else {
+                    Toast.makeText(
+                        this,
+                        "No se ha podido crear el nuevo directorio",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
             dialogNewFolder.setCancelable(false)

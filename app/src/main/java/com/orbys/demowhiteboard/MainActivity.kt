@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var myWhiteboard: MyWhiteboard
     private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
 
-    private val myBitmapsFromWhiteboard = mutableMapOf<Int, Bitmap>()
+    private lateinit var myBitmapsFromWhiteboard:MutableMap<Int,Bitmap>
 
 
     private var totalPages = 1
@@ -101,6 +101,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initValues() {
+        myBitmapsFromWhiteboard = mutableMapOf()
 
         binding.tvCurrentPage.text = GlobalConfig.page.toString()
         binding.tvTotalPage.text = totalPages.toString()
@@ -168,6 +169,7 @@ class MainActivity : AppCompatActivity() {
             }
             totalPages = 1
             GlobalConfig.page = 1
+            myBitmapsFromWhiteboard.clear()
             myWhiteboard = MyWhiteboard(mutableListOf())
 
             binding.tvCurrentPage.text = GlobalConfig.page.toString()
@@ -352,6 +354,7 @@ class MainActivity : AppCompatActivity() {
                     totalPages = 1
                     GlobalConfig.page = 1
                     myWhiteboard = MyWhiteboard(mutableListOf())
+                    myBitmapsFromWhiteboard.clear()
 
                     binding.llMenu.isVisible = false
 
