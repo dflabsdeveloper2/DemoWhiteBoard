@@ -20,6 +20,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
+import com.orbys.demowhiteboard.domain.BitmapWhiteboard
 import com.orbys.demowhiteboard.model.MyWhiteboard
 import com.orbys.demowhiteboard.ui.DialogFilemanager
 import com.orbys.demowhiteboard.ui.DialogImagesBackground
@@ -34,6 +35,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.io.FileReader
 import java.io.FileWriter
 
@@ -43,6 +45,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var myWhiteboard: MyWhiteboard
     private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
+
+    private val myBitmapsFromWhiteboard = mutableMapOf<Int, Bitmap>()
 
 
     private var totalPages = 1
@@ -198,20 +202,55 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnExport.setOnClickListener {
-
+            binding.pbLoading.isVisible = true
             val dir = File(Environment.getExternalStorageDirectory(), "Picture/ORBYS_Whiteboard")
             if (!dir.exists()) {
                 val d = dir.mkdirs()
                 Log.d("EXPORT", "creado dir $d")
             }
 
-            val dialogExport = DialogExport(this, binding.whiteboard)
-            dialogExport.setCancelable(false)
-            dialogExport.show()
+            val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(binding.whiteboard)
+            myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    myBitmapsFromWhiteboard.forEach { (page, whiteboard) ->
+                        Log.d("BITMAP", "page: $page whiteboard ${whiteboard.byteCount}")
+
+                        val fileExported =
+                            File(
+                                Environment.getExternalStorageDirectory(),
+                                "ORBYS/prueba-$page.png"
+                            )
+                        val fileOutputStream = FileOutputStream(fileExported)
+
+                        whiteboard.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+                        fileOutputStream.close()
+                    }
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Imagen guardada en ORBYS",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Error al exportar la imagen",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    }
+                }
+            }
+            binding.pbLoading.isVisible = false
         }
 
         binding.btnAddWhiteboard.setOnClickListener {
-
+            binding.pbLoading.isVisible = true
             if (totalPages == GlobalConfig.LIMIT_PAGES) {
                 Toast.makeText(this, "Maximo numero de paginas", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -220,6 +259,10 @@ class MainActivity : AppCompatActivity() {
             totalPages++
 
             binding.whiteboard.apply {
+
+                val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(this)
+                myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+
                 saveCall { myLine ->
                     if (::myWhiteboard.isInitialized) {
                         if (myWhiteboard.lines.none { it.page == myLine.page }) {
@@ -239,11 +282,17 @@ class MainActivity : AppCompatActivity() {
 
             binding.tvCurrentPage.text = GlobalConfig.page.toString()
             binding.tvTotalPage.text = totalPages.toString()
+            binding.pbLoading.isVisible = false
         }
 
         binding.btnPreviousWhiteboard.setOnClickListener {
+            binding.pbLoading.isVisible = true
             if (GlobalConfig.page > 1) {
                 binding.whiteboard.apply {
+
+                    val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(this)
+                    myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+
                     saveCall { myLine ->
                         if (::myWhiteboard.isInitialized) {
                             if (myWhiteboard.lines.none { it.page == myLine.page }) {
@@ -266,11 +315,17 @@ class MainActivity : AppCompatActivity() {
                 binding.tvCurrentPage.text = GlobalConfig.page.toString()
                 binding.tvTotalPage.text = totalPages.toString()
             }
+            binding.pbLoading.isVisible = false
         }
 
         binding.btnLaterWhiteboard.setOnClickListener {
+            binding.pbLoading.isVisible = true
             if (GlobalConfig.page < totalPages) {
                 binding.whiteboard.apply {
+
+                    val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(this)
+                    myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+
                     saveCall { myLine ->
                         if (::myWhiteboard.isInitialized) {
                             if (myWhiteboard.lines.none { it.page == myLine.page }) {
@@ -293,6 +348,7 @@ class MainActivity : AppCompatActivity() {
                 binding.tvCurrentPage.text = GlobalConfig.page.toString()
                 binding.tvTotalPage.text = totalPages.toString()
             }
+            binding.pbLoading.isVisible = false
         }
     }
 
@@ -417,107 +473,111 @@ class MainActivity : AppCompatActivity() {
     private fun getDataResultActivities() {
         someActivityResultLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                when (result.resultCode) {
 
-                //Dialog Wallpaper
-                if (result.resultCode == DialogImagesBackground.RESULT_CODE_DIALOG_WALLPAPER) {
-                    // El código de resultado está OK, puedes procesar los datos recibidos aquí
-                    val data: Intent? = result.data
-                    val dataString = data?.getStringExtra("fileWallpaper").orEmpty()
-                    if (dataString.isEmpty()) return@registerForActivityResult
+                    DialogImagesBackground.RESULT_CODE_DIALOG_WALLPAPER -> {
+                        // El código de resultado está OK, puedes procesar los datos recibidos aquí
+                        val data: Intent? = result.data
+                        val dataString = data?.getStringExtra("fileWallpaper").orEmpty()
+                        if (dataString.isEmpty()) return@registerForActivityResult
 
-                    binding.pbLoading.isVisible = true
+                        binding.pbLoading.isVisible = true
 
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        val bitmap = BitmapFactory.decodeFile(dataString)
-                        GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
-                            GlobalConfig.SCREEN_WIDTH,
-                            GlobalConfig.SCREEN_HEIGHT,
-                            Bitmap.Config.ARGB_8888
-                        ).apply {
-                            val canvas = Canvas(this)
-                            canvas.scale(
-                                width.toFloat() / bitmap.width,
-                                height.toFloat() / bitmap.height
-                            )
-                            canvas.drawBitmap(bitmap, 0f, 0f, null)
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            val bitmap = BitmapFactory.decodeFile(dataString)
+                            GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
+                                GlobalConfig.SCREEN_WIDTH,
+                                GlobalConfig.SCREEN_HEIGHT,
+                                Bitmap.Config.ARGB_8888
+                            ).apply {
+                                val canvas = Canvas(this)
+                                canvas.scale(
+                                    width.toFloat() / bitmap.width,
+                                    height.toFloat() / bitmap.height
+                                )
+                                canvas.drawBitmap(bitmap, 0f, 0f, null)
+                            }
+
+                            GlobalConfig.backgroundWallpaper =
+                                Util.createBitmapToBase64String(bitmap)
+                            //sendBroadcast(Intent("action.whiteboard"))
+
+                            withContext(Dispatchers.Main) {
+                                binding.whiteboard.invalidate()
+                                binding.pbLoading.isVisible = false
+                            }
                         }
+                    }
 
-                        GlobalConfig.backgroundWallpaper = Util.createBitmapToBase64String(bitmap)
-                        //sendBroadcast(Intent("action.whiteboard"))
+                    DialogSaveWhiteboard.RESULT_CODE_DIALOG_SAVE -> {
+                        val data: Intent? = result.data
+                        val dataString = data?.getStringExtra("fileSave").orEmpty()
 
-                        withContext(Dispatchers.Main) {
-                            binding.whiteboard.invalidate()
+                        if (dataString.isNotBlank()) {
+                            val file = File(dataString)
+                            Log.d("SAVE", "file: ${file.absolutePath}")
+                            binding.pbLoading.isVisible = true
+                            binding.whiteboard.saveCall { myLine ->
+                                if (::myWhiteboard.isInitialized) {
+                                    if (myWhiteboard.lines.none { it.page == myLine.page }) {
+                                        myWhiteboard.lines.add(myLine)
+                                    } else {
+                                        myWhiteboard.lines.removeAll { it.page == myLine.page }
+                                        myWhiteboard.lines.add(myLine)
+                                    }
+                                } else {
+                                    myWhiteboard = MyWhiteboard(lines = mutableListOf())
+                                    myWhiteboard.lines.add(myLine)
+                                }
+                            }
+
+                            val gson = Gson()
+                            val json = gson.toJson(myWhiteboard)
+                            writeJsonToInternalFile(json, file)
+
+                            totalPages = 1
+                            GlobalConfig.page = 1
+                            myWhiteboard = MyWhiteboard(mutableListOf())
+
+
+                            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                            binding.tvTotalPage.text = totalPages.toString()
                             binding.pbLoading.isVisible = false
                         }
                     }
-                }
 
-                if (result.resultCode == DialogSaveWhiteboard.RESULT_CODE_DIALOG_SAVE) {
-                    val data: Intent? = result.data
-                    val dataString = data?.getStringExtra("fileSave").orEmpty()
+                    DialogFilemanager.RESULT_CODE_DIALOG_FILEMANAGER_OPEN_FILE -> {
+                        val data: Intent? = result.data
+                        val dataString = data?.getStringExtra("fileOpen").orEmpty()
 
-                    if (dataString.isNotBlank()) {
-                        val file = File(dataString)
-                        Log.d("SAVE", "file: ${file.absolutePath}")
-                        binding.pbLoading.isVisible = true
-                        binding.whiteboard.saveCall { myLine ->
-                            if (::myWhiteboard.isInitialized) {
-                                if (myWhiteboard.lines.none { it.page == myLine.page }) {
-                                    myWhiteboard.lines.add(myLine)
-                                } else {
-                                    myWhiteboard.lines.removeAll { it.page == myLine.page }
-                                    myWhiteboard.lines.add(myLine)
-                                }
-                            } else {
-                                myWhiteboard = MyWhiteboard(lines = mutableListOf())
-                                myWhiteboard.lines.add(myLine)
-                            }
-                        }
-
-                        val gson = Gson()
-                        val json = gson.toJson(myWhiteboard)
-                        writeJsonToInternalFile(json, file)
-
-                        totalPages = 1
                         GlobalConfig.page = 1
-                        myWhiteboard = MyWhiteboard(mutableListOf())
+                        totalPages = 1
+                        myWhiteboard = MyWhiteboard(lines = mutableListOf())
 
+                        val file = File(dataString)
+
+                        try {
+                            // Check if the file exists
+                            if (file.exists()) {
+                                // Read the JSON file
+                                val gson = Gson()
+                                val fileReader = FileReader(file)
+                                val myDataClass =
+                                    gson.fromJson(fileReader, MyWhiteboard::class.java)
+                                binding.whiteboard.drawSavedJson(myDataClass.lines.first { it.page == 1 })
+                                myWhiteboard = myDataClass
+                                totalPages = myWhiteboard.lines.maxOf { it.page }
+                            } else {
+                                Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
 
                         binding.tvCurrentPage.text = GlobalConfig.page.toString()
                         binding.tvTotalPage.text = totalPages.toString()
-                        binding.pbLoading.isVisible = false
                     }
-                }
-
-                if(result.resultCode == DialogFilemanager.RESULT_CODE_DIALOG_FILEMANAGER_OPEN_FILE){
-                    val data: Intent? = result.data
-                    val dataString = data?.getStringExtra("fileOpen").orEmpty()
-
-                    GlobalConfig.page = 1
-                    totalPages = 1
-                    myWhiteboard = MyWhiteboard(lines = mutableListOf())
-
-                    val file = File(dataString)
-
-                    try {
-                        // Check if the file exists
-                        if (file.exists()) {
-                            // Read the JSON file
-                            val gson = Gson()
-                            val fileReader = FileReader(file)
-                            val myDataClass = gson.fromJson(fileReader, MyWhiteboard::class.java)
-                            binding.whiteboard.drawSavedJson(myDataClass.lines.first { it.page == 1 })
-                            myWhiteboard = myDataClass
-                            totalPages = myWhiteboard.lines.maxOf { it.page }
-                        } else {
-                            Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-
-                    binding.tvCurrentPage.text = GlobalConfig.page.toString()
-                    binding.tvTotalPage.text = totalPages.toString()
                 }
             }
     }
