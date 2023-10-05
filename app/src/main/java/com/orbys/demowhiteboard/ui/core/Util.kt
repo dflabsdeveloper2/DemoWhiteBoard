@@ -1,12 +1,10 @@
 package com.orbys.demowhiteboard.ui.core
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.os.Environment
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
-import java.io.ByteArrayOutputStream
-import java.util.Base64
+import java.io.File
 
 object Util {
 
@@ -18,6 +16,7 @@ object Util {
 
     const val finePointSize = 0.003
     const val thickPointSize = 0.01
+    val defaultFolder = File(Environment.getExternalStorageDirectory(), "/ORBYS/ORBYS_Whiteboard")
 
     fun initDialogColor(context: Context, color:(Int)->Unit){
         ColorPickerDialog.Builder(context)
@@ -35,15 +34,5 @@ object Util {
             .show()
     }
 
-    fun createBitmapToBase64String(bitmap: Bitmap): String {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
-        return Base64.getEncoder().encodeToString(byteArray)
-    }
 
-    fun createBitmapFromBase64String(base64String: String): Bitmap {
-        val byteArray = Base64.getDecoder().decode(base64String)
-        return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-    }
 }

@@ -3,29 +3,29 @@ package com.orbys.demowhiteboard.ui
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.orbys.demowhiteboard.databinding.ActivityDialogSaveWhiteboardBinding
+import androidx.core.view.isVisible
+import com.orbys.demowhiteboard.databinding.ActivityDialogExportBinding
 import com.orbys.demowhiteboard.ui.core.Util
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 
-class DialogSaveWhiteboard : AppCompatActivity() {
+class DialogExport : AppCompatActivity() {
 
-    private lateinit var binding: ActivityDialogSaveWhiteboardBinding
+    private lateinit var binding: ActivityDialogExportBinding
 
     private var fileToSave: File? = null
 
-    companion object {
-        const val RESULT_CODE_DIALOG_SAVE = 122 // Código de resultado personalizado
+    companion object{
+        const val RESULT_CODE_DIALOG_EXPORT = 15723 // Código de resultado personalizado
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityDialogSaveWhiteboardBinding.inflate(layoutInflater)
+        binding = ActivityDialogExportBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         initUI()
@@ -53,12 +53,11 @@ class DialogSaveWhiteboard : AppCompatActivity() {
         val name = dateFormat.format(date)
 
         binding.etNameFile.setText(name)
-
     }
 
     private fun initListenners() {
         binding.etFolderFile.setOnClickListener {
-            val intentFileManager = Intent(this,DialogFilemanager::class.java)
+            val intentFileManager = Intent(this, DialogFilemanager::class.java)
             someActivityResultLauncher.launch(intentFileManager)
         }
 
@@ -67,22 +66,30 @@ class DialogSaveWhiteboard : AppCompatActivity() {
         }
 
         binding.btnOk.setOnClickListener {
+            binding.pbLoadingDialogExported.isVisible = true
+
             val dir = fileToSave?.absolutePath ?: Util.defaultFolder.absolutePath
             val name = binding.etNameFile.text.toString()
-            Log.d("SAVE", "dir: $dir")
-            if (dir != null) {
-                if (dir.isNotBlank() && name.isNotBlank()) {
-                    val file = File(dir, "$name.orbys")
+            val rgFormat = binding.rgButtonsFormat.checkedRadioButtonId
 
-                    val intentData = Intent()
-                    intentData.putExtra("fileSave", file.absolutePath)
+            if (name.isNotBlank() && dir.isNotBlank()) {
+                val onlyCurrentPage = binding.cbCurrentPage.isChecked
 
-                    setResult(RESULT_CODE_DIALOG_SAVE, intentData)
-                    finish()
-                } else {
-                    Toast.makeText(this, "Rellena los campos", Toast.LENGTH_SHORT).show()
-                }
+                val bundle = Bundle()
+                bundle.putString("file","$dir/$name")
+                bundle.putInt("extension",rgFormat)
+                bundle.putBoolean("onlyPage",onlyCurrentPage)
+
+                val intent = Intent()
+                intent.putExtra("fileExported",bundle)
+
+                setResult(RESULT_CODE_DIALOG_EXPORT,intent)
+                finish()
+            } else {
+                Toast.makeText(this, "Rellena todos los campos", Toast.LENGTH_SHORT)
+                    .show()
             }
+            binding.pbLoadingDialogExported.isVisible = false
         }
     }
 
@@ -104,4 +111,5 @@ class DialogSaveWhiteboard : AppCompatActivity() {
                 }
             }
         }
+
 }

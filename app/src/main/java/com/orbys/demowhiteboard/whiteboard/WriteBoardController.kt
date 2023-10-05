@@ -18,7 +18,7 @@ import com.orbys.demowhiteboard.eraser.EraserActor
 import com.orbys.demowhiteboard.model.MyLine
 import com.orbys.demowhiteboard.model.MyLines
 import com.orbys.demowhiteboard.model.MyPaint
-import com.orbys.demowhiteboard.ui.core.Util
+import com.orbys.demowhiteboard.ui.core.Helper
 import com.skg.drawaccelerate.AccelerateManager
 
 class WriteBoardController(private val context:Context, private val callBack: () -> Unit) : Handler.Callback {
@@ -149,7 +149,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 val lineDraw = obj.listLines
 
                 val bitmapWallpaper =
-                    GlobalConfig.backgroundWallpaper?.let { Util.createBitmapFromBase64String(it) }
+                    GlobalConfig.backgroundWallpaper?.let { Helper.createBitmapFromBase64String(it) }
 
 
                 //establecer bitmap wallpaper
@@ -173,7 +173,6 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                         }
                     }
                 }
-
 
                 val offscreenBitmap = Bitmap.createBitmap(
                     GlobalConfig.SCREEN_WIDTH,

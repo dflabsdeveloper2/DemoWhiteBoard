@@ -22,12 +22,13 @@ import com.google.gson.Gson
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.domain.BitmapWhiteboard
 import com.orbys.demowhiteboard.model.MyWhiteboard
+import com.orbys.demowhiteboard.ui.DialogExport
 import com.orbys.demowhiteboard.ui.DialogFilemanager
 import com.orbys.demowhiteboard.ui.DialogImagesBackground
 import com.orbys.demowhiteboard.ui.DialogSaveWhiteboard
+import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.core.Util
 import com.orbys.demowhiteboard.ui.dialog.DialogClose
-import com.orbys.demowhiteboard.ui.dialog.DialogExport
 import com.orbys.demowhiteboard.ui.dialog.DialogNewWhiteboard
 import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.skg.drawaccelerate.AccelerateManager
@@ -37,7 +38,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
-import java.io.FileWriter
 
 
 class MainActivity : AppCompatActivity() {
@@ -203,7 +203,13 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnExport.setOnClickListener {
             binding.pbLoading.isVisible = true
-            val dir = File(Environment.getExternalStorageDirectory(), "Picture/ORBYS_Whiteboard")
+
+            val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(binding.whiteboard)
+            myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+
+            val intentDialogExport = Intent(this, DialogExport::class.java)
+            someActivityResultLauncher.launch(intentDialogExport)
+            /*val dir = File(Environment.getExternalStorageDirectory(), "Picture/ORBYS_Whiteboard")
             if (!dir.exists()) {
                 val d = dir.mkdirs()
                 Log.d("EXPORT", "creado dir $d")
@@ -245,7 +251,7 @@ class MainActivity : AppCompatActivity() {
                             .show()
                     }
                 }
-            }
+            }*/
             binding.pbLoading.isVisible = false
         }
 
@@ -364,9 +370,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.tvExport.setOnClickListener {
-            val dialogExport = DialogExport(this,binding.whiteboard)
-            dialogExport.setCancelable(false)
-            dialogExport.show()
+            val intentDialogExport = Intent(this, DialogExport::class.java)
+            someActivityResultLauncher.launch(intentDialogExport)
 
             binding.llMenu.isVisible = false
         }
@@ -416,17 +421,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun writeJsonToInternalFile(json: String, fileSaved: File) {
-        try {
-            Log.d("SAVE", "writeJsonToInternalFile: ${fileSaved.absolutePath}")
 
-            val f = FileWriter(fileSaved)
-            f.write(json)
-            f.close()
-        } catch (e: Exception) {
-            Log.d("SAVE", "Exception to save: $e")
-        }
-    }
+
 
     override fun onStart() {
         super.onStart()
@@ -499,7 +495,7 @@ class MainActivity : AppCompatActivity() {
                             }
 
                             GlobalConfig.backgroundWallpaper =
-                                Util.createBitmapToBase64String(bitmap)
+                                Helper.createBitmapToBase64String(bitmap)
                             //sendBroadcast(Intent("action.whiteboard"))
 
                             withContext(Dispatchers.Main) {
@@ -533,7 +529,7 @@ class MainActivity : AppCompatActivity() {
 
                             val gson = Gson()
                             val json = gson.toJson(myWhiteboard)
-                            writeJsonToInternalFile(json, file)
+                            Helper.writeJsonToInternalFile(json, file)
 
                             totalPages = 1
                             GlobalConfig.page = 1
@@ -577,6 +573,104 @@ class MainActivity : AppCompatActivity() {
 
                         binding.tvCurrentPage.text = GlobalConfig.page.toString()
                         binding.tvTotalPage.text = totalPages.toString()
+                    }
+
+                    DialogExport.RESULT_CODE_DIALOG_EXPORT -> {
+                        binding.pbLoading.isVisible = true
+                        val data: Intent? = result.data
+                        val dataBundle = data?.getBundleExtra("fileExported")
+                        val fileExported = dataBundle?.getString("file")
+                        val rgFormat = dataBundle?.getInt("extension")
+                        val onlyCurrentPage = dataBundle?.getBoolean("onlyPage")
+
+                        if (rgFormat != null && fileExported != null && onlyCurrentPage != null) {
+                            val extension: String
+                            val format: Bitmap.CompressFormat? = when (rgFormat) {
+                                R.id.rbJPEG -> {
+                                    extension = ".jpeg"
+                                    Bitmap.CompressFormat.JPEG
+                                }
+
+                                R.id.rbPNG -> {
+                                    extension = ".png"
+                                    Bitmap.CompressFormat.PNG
+                                }
+
+                                else -> {
+                                    extension = ".pdf"
+                                    null
+                                }
+                            }
+
+                            try {
+                                if (format == null) {
+                                    if (onlyCurrentPage) {
+                                        val bitmap = myBitmapsFromWhiteboard[GlobalConfig.page]
+                                        bitmap?.let {
+                                            Helper.createPdfWithBitmaps(
+                                                listOf(it),
+                                                File(
+                                                    fileExported + extension
+                                                )
+                                            )
+                                        }
+                                    } else {
+                                        Helper.createPdfWithBitmaps(
+                                            myBitmapsFromWhiteboard.map { it.value }, File(
+                                                fileExported + extension
+                                            )
+                                        )
+                                    }
+                                } else {
+                                    myBitmapsFromWhiteboard.forEach { (page, whiteboard) ->
+                                        if (onlyCurrentPage) {
+                                            if (GlobalConfig.page == page) {
+                                                val file = File(
+                                                    fileExported + extension
+                                                )
+
+                                                val fileOutputStream = FileOutputStream(file)
+                                                whiteboard.compress(
+                                                    format,
+                                                    100,
+                                                    fileOutputStream
+                                                )
+                                                fileOutputStream.close()
+
+                                                return@forEach
+                                            }
+                                        } else {
+                                            val file = File(
+                                                "$fileExported-$page$extension"
+                                            )
+
+                                            Log.d("EXPORT", "file ${file.path}")
+
+                                            val fileOutputStream = FileOutputStream(file)
+                                            whiteboard.compress(format, 100, fileOutputStream)
+                                            fileOutputStream.close()
+                                        }
+                                    }
+                                }
+
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Imagen guardada en $fileExported",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
+                            } catch (e: Exception) {
+
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Error al guardar la imagen",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
+                            }
+                        }
+
+                        binding.pbLoading.isVisible = false
                     }
                 }
             }

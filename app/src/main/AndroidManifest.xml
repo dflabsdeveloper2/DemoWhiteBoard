@@ -18,6 +18,10 @@
         android:theme="@style/Theme.DemoWhiteBoard"
         tools:targetApi="31">
         <activity
+            android:name=".ui.DialogExport"
+            android:exported="false"
+            android:theme="@style/DialogsCustom"/>
+        <activity
             android:name=".ui.DialogImagesBackground"
             android:exported="false"
             android:theme="@style/DialogsCustom" />
