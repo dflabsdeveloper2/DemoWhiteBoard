@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">DemoWhiteBoard</string>
+    <string name="api_key" translatable="false">AIzaSyCKV_95nE54qscsLBeEcj_4P6rMNTldQc0</string>
+    <string name="api_cx" translatable="false">e0b9072de156d4dbe</string>
+    <string name="api_key_youtube" translatable="false">AIzaSyB0Juvl52UZZzz4yAGs0Sw8GKk2Dp3LEiY</string>
     <string name="btn_create_new_folder">New Folder</string>
     <string name="btn_select_files">Select</string>
 </resources>

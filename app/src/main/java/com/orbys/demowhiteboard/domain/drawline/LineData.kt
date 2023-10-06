@@ -1,10 +1,10 @@
-package com.orbys.demowhiteboard.drawline
+package com.orbys.demowhiteboard.domain.drawline
 
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.PointF
-import com.orbys.demowhiteboard.model.MyPaint
+import com.orbys.demowhiteboard.domain.model.MyPaint
 
 class LineData(private val mColor: Int, private val mWidth: Float,) {
     private val mTempPoints: MutableList<PointF> = ArrayList()

@@ -1,4 +1,4 @@
-package com.orbys.demowhiteboard.model
+package com.orbys.demowhiteboard.domain.model
 
 import android.graphics.Path
 import android.graphics.PointF

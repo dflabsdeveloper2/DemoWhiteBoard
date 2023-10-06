@@ -1,10 +1,9 @@
-package com.orbys.demowhiteboard.model
+package com.orbys.demowhiteboard.domain.model
 
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
-import android.graphics.Xfermode
 
 data class MyPaint(
     var flag: Int = Paint.ANTI_ALIAS_FLAG,

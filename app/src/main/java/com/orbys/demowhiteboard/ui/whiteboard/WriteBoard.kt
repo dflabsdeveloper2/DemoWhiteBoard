@@ -1,4 +1,4 @@
-package com.orbys.demowhiteboard.whiteboard
+package com.orbys.demowhiteboard.ui.whiteboard
 
 import android.content.Context
 import android.graphics.Canvas
@@ -6,11 +6,11 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import com.orbys.demowhiteboard.Distribute
-import com.orbys.demowhiteboard.GlobalConfig
-import com.orbys.demowhiteboard.drawline.DrawLineDistribute
-import com.orbys.demowhiteboard.eraser.EraserDistribute
-import com.orbys.demowhiteboard.model.MyLines
+import com.orbys.demowhiteboard.ui.Distribute
+import com.orbys.demowhiteboard.core.GlobalConfig
+import com.orbys.demowhiteboard.domain.drawline.DrawLineDistribute
+import com.orbys.demowhiteboard.domain.eraser.EraserDistribute
+import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.ui.core.Util
 
 class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) {
@@ -68,7 +68,7 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
         mController.saveWhiteboard { lines(it) }
     }
 
-    fun drawSavedJson(data:MyLines){
+    fun drawSavedJson(data: MyLines){
         mController.drawSaved(data)
     }
 

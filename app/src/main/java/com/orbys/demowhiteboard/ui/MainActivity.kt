@@ -1,4 +1,4 @@
-package com.orbys.demowhiteboard
+package com.orbys.demowhiteboard.ui
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -19,18 +19,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
+import com.orbys.demowhiteboard.R
+import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.domain.BitmapWhiteboard
-import com.orbys.demowhiteboard.model.MyWhiteboard
-import com.orbys.demowhiteboard.ui.DialogExport
-import com.orbys.demowhiteboard.ui.DialogFilemanager
-import com.orbys.demowhiteboard.ui.DialogImagesBackground
-import com.orbys.demowhiteboard.ui.DialogSaveWhiteboard
+import com.orbys.demowhiteboard.domain.model.MyWhiteboard
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.core.Util
 import com.orbys.demowhiteboard.ui.dialog.DialogClose
 import com.orbys.demowhiteboard.ui.dialog.DialogNewWhiteboard
 import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
+import com.orbys.demowhiteboard.ui.dialog.DialogQR
 import com.skg.drawaccelerate.AccelerateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -215,10 +214,25 @@ class MainActivity : AppCompatActivity() {
             binding.pbLoading.isVisible = false
         }
 
+        binding.btnQr.setOnClickListener {
+
+            val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(binding.whiteboard)
+            myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+
+            val sortedBitmaps: List<Bitmap> = myBitmapsFromWhiteboard.entries
+                .sortedBy { it.key }  // Ordenar por la clave (INT) de menor a mayor
+                .map { it.value }
+
+            val dialogQr = DialogQR(this, sortedBitmaps)
+            dialogQr.setCancelable(true)
+            dialogQr.show()
+        }
+
         binding.btnAddWhiteboard.setOnClickListener {
             binding.pbLoading.isVisible = true
             if (totalPages == GlobalConfig.LIMIT_PAGES) {
                 Toast.makeText(this, "Maximo numero de paginas", Toast.LENGTH_SHORT).show()
+                binding.pbLoading.isVisible = false
                 return@setOnClickListener
             }
 

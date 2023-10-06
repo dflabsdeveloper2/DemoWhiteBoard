@@ -1,4 +1,4 @@
-package com.orbys.demowhiteboard
+package com.orbys.demowhiteboard.core
 
 import android.graphics.Bitmap
 import android.graphics.Canvas

@@ -1,7 +1,7 @@
-package com.orbys.demowhiteboard.eraser
+package com.orbys.demowhiteboard.domain.eraser
 
 import android.graphics.RectF
-import com.orbys.demowhiteboard.whiteboard.WriteBoardController
+import com.orbys.demowhiteboard.ui.whiteboard.WriteBoardController
 
 
 abstract class EraserActor(

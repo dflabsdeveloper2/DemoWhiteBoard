@@ -1,6 +1,6 @@
-package com.orbys.demowhiteboard.drawline
+package com.orbys.demowhiteboard.domain.drawline
 
-import com.orbys.demowhiteboard.whiteboard.WriteBoardController
+import com.orbys.demowhiteboard.ui.whiteboard.WriteBoardController
 
 abstract class DrawLineActor(mController: WriteBoardController, id: Int, color: Int, width: Float) {
     protected var mWriteBoardController: WriteBoardController

@@ -1,8 +1,7 @@
-package com.orbys.demowhiteboard.drawline
+package com.orbys.demowhiteboard.domain.drawline
 
-import android.util.Log
+import com.orbys.demowhiteboard.ui.whiteboard.WriteBoardController
 import com.skg.drawaccelerate.AccelerateManager
-import com.orbys.demowhiteboard.whiteboard.WriteBoardController
 
 
 class AccelerateDrawLineActor(

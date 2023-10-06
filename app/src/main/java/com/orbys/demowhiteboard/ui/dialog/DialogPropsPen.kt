@@ -6,7 +6,7 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
 import android.widget.SeekBar
-import com.orbys.demowhiteboard.GlobalConfig
+import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.databinding.DialogStylePenBinding
 import com.orbys.demowhiteboard.ui.core.Util
 

@@ -1,4 +1,4 @@
-package com.orbys.demowhiteboard.whiteboard
+package com.orbys.demowhiteboard.ui.whiteboard
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -8,16 +8,16 @@ import android.os.HandlerThread
 import android.os.Message
 import android.util.Log
 import android.widget.Toast
-import com.orbys.demowhiteboard.GlobalConfig
-import com.orbys.demowhiteboard.drawline.AccelerateDrawLineActor
-import com.orbys.demowhiteboard.drawline.DrawLineActor
-import com.orbys.demowhiteboard.drawline.LineData
-import com.orbys.demowhiteboard.eraser.AccelerateEraserActor
-import com.orbys.demowhiteboard.eraser.EraseData
-import com.orbys.demowhiteboard.eraser.EraserActor
-import com.orbys.demowhiteboard.model.MyLine
-import com.orbys.demowhiteboard.model.MyLines
-import com.orbys.demowhiteboard.model.MyPaint
+import com.orbys.demowhiteboard.core.GlobalConfig
+import com.orbys.demowhiteboard.domain.drawline.AccelerateDrawLineActor
+import com.orbys.demowhiteboard.domain.drawline.DrawLineActor
+import com.orbys.demowhiteboard.domain.drawline.LineData
+import com.orbys.demowhiteboard.domain.eraser.AccelerateEraserActor
+import com.orbys.demowhiteboard.domain.eraser.EraseData
+import com.orbys.demowhiteboard.domain.eraser.EraserActor
+import com.orbys.demowhiteboard.domain.model.MyLine
+import com.orbys.demowhiteboard.domain.model.MyLines
+import com.orbys.demowhiteboard.domain.model.MyPaint
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.skg.drawaccelerate.AccelerateManager
 

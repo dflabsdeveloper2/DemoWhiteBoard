@@ -2,7 +2,7 @@ package com.orbys.demowhiteboard.domain
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import com.orbys.demowhiteboard.whiteboard.WriteBoard
+import com.orbys.demowhiteboard.ui.whiteboard.WriteBoard
 
 object BitmapWhiteboard {
 

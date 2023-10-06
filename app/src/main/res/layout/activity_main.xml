@@ -5,9 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layerType="hardware"
-    tools:context=".MainActivity">
+    tools:context=".ui.MainActivity">
 
-    <com.orbys.demowhiteboard.whiteboard.WriteBoard
+    <com.orbys.demowhiteboard.ui.whiteboard.WriteBoard
         android:id="@+id/whiteboard"
         android:layout_width="0dp"
         android:layout_height="0dp"

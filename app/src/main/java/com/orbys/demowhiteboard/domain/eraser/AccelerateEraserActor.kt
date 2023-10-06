@@ -1,8 +1,8 @@
-package com.orbys.demowhiteboard.eraser
+package com.orbys.demowhiteboard.domain.eraser
 
-import com.orbys.demowhiteboard.GlobalConfig
+import com.orbys.demowhiteboard.core.GlobalConfig
 import com.skg.drawaccelerate.AccelerateManager
-import com.orbys.demowhiteboard.whiteboard.WriteBoardController
+import com.orbys.demowhiteboard.ui.whiteboard.WriteBoardController
 
 
 class AccelerateEraserActor(

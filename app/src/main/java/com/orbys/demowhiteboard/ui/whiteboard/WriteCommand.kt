@@ -1,4 +1,4 @@
-package com.orbys.demowhiteboard.whiteboard
+package com.orbys.demowhiteboard.ui.whiteboard
 
 object WriteCommand {
     const val CLEAN = 0

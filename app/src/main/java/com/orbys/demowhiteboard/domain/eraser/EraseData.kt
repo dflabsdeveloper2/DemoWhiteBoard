@@ -1,4 +1,4 @@
-package com.orbys.demowhiteboard.eraser
+package com.orbys.demowhiteboard.domain.eraser
 
 import android.graphics.PointF
 import android.graphics.RectF
