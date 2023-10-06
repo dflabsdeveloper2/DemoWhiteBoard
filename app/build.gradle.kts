@@ -62,4 +62,8 @@ dependencies {
 
     //QR
     implementation("com.google.zxing:core:3.5.2")
+
+    //Coil para cargar imagenes
+    implementation("io.coil-kt:coil:2.4.0")
+
 }

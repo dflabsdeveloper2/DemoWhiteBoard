@@ -65,7 +65,6 @@ class DialogQR(context: Context, private var listBitmap:List<Bitmap>):Dialog(con
 
             //Json del qr para subirlo al servidor
             val data =
-
                 QrDataJson(
                     encryption = encryption,
                     password = if (password.isEmpty()) null else password.toInt(),
@@ -75,7 +74,6 @@ class DialogQR(context: Context, private var listBitmap:List<Bitmap>):Dialog(con
             var urlImage: ResponseQR? = null
             try {
                 urlImage = RetrofitClient.serviceQR.saveImages(data)
-
             } catch (e: Exception) {
                 withContext(Dispatchers.Main){
                     binding.pbLoading.isVisible = false

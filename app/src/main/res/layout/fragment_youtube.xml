@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frameLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingHorizontal="32dp"
+    android:paddingVertical="16dp"
+    tools:context=".ui.fragment.YoutubeFragment">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="YOUTUBE"
+        android:gravity="center"
+        android:textSize="32sp"
+        app:layout_constraintBottom_toTopOf="@id/etSearchYoutube"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/etSearchYoutube"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:imeOptions="actionGo"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:maxLength="30"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/rvGoogle"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvGoogle"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etSearchYoutube"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

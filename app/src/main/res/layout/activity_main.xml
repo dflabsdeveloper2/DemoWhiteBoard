@@ -83,7 +83,6 @@
             android:layout_height="wrap_content"
             android:src="@drawable/orbys"
             android:layout_marginStart="32dp"
-            android:layout_marginEnd="64dp"
             android:scaleType="centerInside"/>
 
         <!--<ImageView
@@ -156,7 +155,7 @@
             android:layout_height="50dp"
             android:src="@drawable/undo"
             android:padding="8dp"
-            android:scaleType="centerInside"/>
+            android:scaleType="centerInside" />
 
         <ImageView
             android:id="@+id/btnRedo"
@@ -164,7 +163,23 @@
             android:layout_height="50dp"
             android:src="@drawable/redo"
             android:padding="8dp"
-            android:scaleType="centerInside"/>
+            android:scaleType="centerInside" />
+
+        <ImageView
+            android:id="@+id/btnGoogle"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="8dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/google" />
+
+        <ImageView
+            android:id="@+id/btnYoutube"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="8dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/youtube" />
 
         <ImageView
             android:id="@+id/btnSave"
@@ -172,7 +187,7 @@
             android:layout_height="50dp"
             android:src="@drawable/save"
             android:padding="8dp"
-            android:scaleType="centerInside"/>
+            android:scaleType="centerInside" />
 
         <ImageView
             android:id="@+id/btnQr"
@@ -202,8 +217,7 @@
             android:id="@+id/btnPreviousWhiteboard"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:padding="8dp"
-            android:paddingEnd="0dp"
+            android:paddingVertical="8dp"
             android:scaleType="centerInside"
             android:src="@drawable/backicon" />
 
@@ -234,8 +248,7 @@
             android:id="@+id/btnLaterWhiteboard"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:padding="8dp"
-            android:paddingStart="0dp"
+            android:paddingVertical="8dp"
             android:scaleType="centerInside"
             android:src="@drawable/nexticon" />
 
@@ -258,6 +271,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:visibility="gone" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fContainer"
+        android:layout_width="300dp"
+        android:layout_height="0dp"
+        android:background="@color/white"
+        app:layout_constraintBottom_toTopOf="@id/bottomMenuWhiteboard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

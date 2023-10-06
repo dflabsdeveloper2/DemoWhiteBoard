@@ -30,6 +30,7 @@ import com.orbys.demowhiteboard.ui.dialog.DialogClose
 import com.orbys.demowhiteboard.ui.dialog.DialogNewWhiteboard
 import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.orbys.demowhiteboard.ui.dialog.DialogQR
+import com.orbys.demowhiteboard.ui.fragment.GoogleImagesFragment
 import com.skg.drawaccelerate.AccelerateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -329,6 +330,15 @@ class MainActivity : AppCompatActivity() {
                 binding.tvTotalPage.text = totalPages.toString()
             }
             binding.pbLoading.isVisible = false
+        }
+
+        binding.btnGoogle.setOnClickListener {
+            binding.fContainer.isVisible = !binding.fContainer.isVisible
+
+            // Agrega el fragmento al contenedor
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fContainer, GoogleImagesFragment())
+                .commit()
         }
     }
 
