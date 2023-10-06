@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.orbys.demowhiteboard.R
 import com.orbys.demowhiteboard.core.Util
+import com.orbys.demowhiteboard.core.hideKeyboard
 import com.orbys.demowhiteboard.data.api.RetrofitClient
 import com.orbys.demowhiteboard.data.api.model.ImageModel
 import com.orbys.demowhiteboard.data.api.model.image.ListImageModelApi
@@ -71,6 +72,7 @@ class GoogleImagesFragment : Fragment() {
             when (actionId) {
                 EditorInfo.IME_ACTION_GO -> {
                     Log.d("GOOGLE","CLICK")
+                    v.hideKeyboard()
                     listImages.clear()
                     binding.pbLoading.isVisible = true
                     // Do something when the user presses "Done"
@@ -141,7 +143,7 @@ class GoogleImagesFragment : Fragment() {
                            }
 
                             listImagesApi?.let {
-                                if (!it.items.isNullOrEmpty()) {
+                                if (it.items.isNotEmpty()) {
                                     listImages?.addAll(it.items.map { item ->
                                         ImageModel(
                                             item.link,
