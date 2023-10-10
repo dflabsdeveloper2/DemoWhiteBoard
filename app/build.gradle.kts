@@ -66,4 +66,8 @@ dependencies {
     //Coil para cargar imagenes
     implementation("io.coil-kt:coil:2.4.0")
 
+    //youtube player
+    val youtubePlayerVersion = "12.1.0"
+    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:$youtubePlayerVersion")
+    implementation ("com.pierfrancescosoffritti.androidyoutubeplayer:custom-ui:$youtubePlayerVersion")
 }

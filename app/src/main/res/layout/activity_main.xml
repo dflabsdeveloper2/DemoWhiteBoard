@@ -282,7 +282,30 @@
         app:layout_constraintBottom_toTopOf="@id/bottomMenuWhiteboard"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
+  <!--  <com.orbys.demowhiteboard.ui.MyYoutubePlayerView
+        android:id="@+id/myContainerYoutube"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/bottomMenuWhiteboard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone">-->
+
+        <com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+            android:id="@+id/youtube_player_view"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/bottomMenuWhiteboard"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="gone"
+            app:autoPlay="false"
+            app:enableAutomaticInitialization="false"/>
+
+   <!-- </com.orbys.demowhiteboard.ui.MyYoutubePlayerView>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
