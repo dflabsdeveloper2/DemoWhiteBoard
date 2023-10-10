@@ -3,6 +3,9 @@ package com.orbys.demowhiteboard.ui.whiteboard
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Rect
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message

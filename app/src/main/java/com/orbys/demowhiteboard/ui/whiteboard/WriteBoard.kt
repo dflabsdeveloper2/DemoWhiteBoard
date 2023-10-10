@@ -1,23 +1,26 @@
 package com.orbys.demowhiteboard.ui.whiteboard
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import com.orbys.demowhiteboard.ui.Distribute
 import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.domain.drawline.DrawLineDistribute
 import com.orbys.demowhiteboard.domain.eraser.EraserDistribute
 import com.orbys.demowhiteboard.domain.model.MyLines
+import com.orbys.demowhiteboard.ui.MainActivity
 import com.orbys.demowhiteboard.ui.core.Util
+import com.orbys.demowhiteboard.ui.interfaz.Distribute
 
 class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private val mController = WriteBoardController(context) { this.postInvalidate() }
     private val mDrawLineDistribute: DrawLineDistribute = DrawLineDistribute(mController)
     private val mEraserDistribute: EraserDistribute = EraserDistribute(mController)
     private var mActiveDistribute: Distribute = mDrawLineDistribute
+
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -29,19 +32,26 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
         val actionMasked: Int = event.actionMasked
         val size = event.size
         if (actionMasked == MotionEvent.ACTION_DOWN) {
-            mActiveDistribute = if (size< Util.thickPointSize) {
-                if(size>Util.finePointSize){
-                    GlobalConfig.sPenWidth = GlobalConfig.penWidthGrueso
-                    GlobalConfig.sPenColor = GlobalConfig.penColorGrueso
-                }else{
-                    GlobalConfig.sPenWidth = GlobalConfig.penWidthFino
-                    GlobalConfig.sPenColor = GlobalConfig.penColorFino
-                }
-                GlobalConfig.sMode = 0
-                mDrawLineDistribute
-            } else {
+            mActiveDistribute = if (MainActivity.modeSelected) {
+               /* GlobalConfig.sMode = 3
+                mImageDistribute*/
                 GlobalConfig.sMode = 1
                 mEraserDistribute
+            } else {
+                if (size < Util.thickPointSize) {
+                    if (size > Util.finePointSize) {
+                        GlobalConfig.sPenWidth = GlobalConfig.penWidthGrueso
+                        GlobalConfig.sPenColor = GlobalConfig.penColorGrueso
+                    } else {
+                        GlobalConfig.sPenWidth = GlobalConfig.penWidthFino
+                        GlobalConfig.sPenColor = GlobalConfig.penColorFino
+                    }
+                    GlobalConfig.sMode = 0
+                    mDrawLineDistribute
+                } else {
+                    GlobalConfig.sMode = 1
+                    mEraserDistribute
+                }
             }
         }
         mActiveDistribute.onTouchEvent(event)
@@ -72,11 +82,11 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
         mController.drawSaved(data)
     }
 
-    fun redoBtn(){
+    fun redoBtn() {
         mController.redoAction()
     }
 
-    fun undoBtn(){
+    fun undoBtn() {
         mController.undoAction()
     }
 }

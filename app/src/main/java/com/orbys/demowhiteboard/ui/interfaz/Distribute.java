@@ -1,4 +1,4 @@
-package com.orbys.demowhiteboard.ui;
+package com.orbys.demowhiteboard.ui.interfaz;
 
 import android.view.MotionEvent;
 

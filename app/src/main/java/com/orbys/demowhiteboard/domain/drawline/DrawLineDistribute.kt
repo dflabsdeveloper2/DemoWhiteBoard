@@ -3,11 +3,12 @@ package com.orbys.demowhiteboard.domain.drawline
 import android.util.Log
 import android.util.SparseArray
 import android.view.MotionEvent
-import com.orbys.demowhiteboard.ui.Distribute
+import com.orbys.demowhiteboard.ui.interfaz.Distribute
 import com.orbys.demowhiteboard.ui.core.Util
 import com.orbys.demowhiteboard.ui.whiteboard.WriteBoardController
 
-class DrawLineDistribute(mController: WriteBoardController) : Distribute {
+class DrawLineDistribute(mController: WriteBoardController) :
+    Distribute {
     private var mActiveLines = SparseArray<DrawLineActor>()
     private val mWriteBoardController: WriteBoardController
 

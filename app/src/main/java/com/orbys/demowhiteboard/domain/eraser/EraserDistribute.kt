@@ -2,10 +2,11 @@ package com.orbys.demowhiteboard.domain.eraser
 
 import android.util.Log
 import android.view.MotionEvent
-import com.orbys.demowhiteboard.ui.Distribute
+import com.orbys.demowhiteboard.ui.interfaz.Distribute
 import com.orbys.demowhiteboard.ui.whiteboard.WriteBoardController
 
-class EraserDistribute(mController: WriteBoardController) : Distribute {
+class EraserDistribute(mController: WriteBoardController) :
+    Distribute {
     private var mActiveActor: EraserActor? = null
     private val mWriteBoardController: WriteBoardController
 

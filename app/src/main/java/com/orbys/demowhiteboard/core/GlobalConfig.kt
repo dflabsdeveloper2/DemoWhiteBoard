@@ -25,6 +25,8 @@ object GlobalConfig {
     var backgroundColor:Int? = defaultBackgroundColor
     var backgroundWallpaper: String? = null
     var page = 1
+    var listImages:MutableList<Bitmap>? = null
+
 
     var backgroundBitmap: Bitmap = Bitmap.createBitmap(
         SCREEN_WIDTH, SCREEN_HEIGHT,

@@ -48,9 +48,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var myBitmapsFromWhiteboard:MutableMap<Int,Bitmap>
-
-
     private var totalPages = 1
+
+    companion object {
+        var modeSelected = false
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,6 +104,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initValues() {
+        GlobalConfig.listImages = mutableListOf()
+
         myBitmapsFromWhiteboard = mutableMapOf()
 
         binding.tvCurrentPage.text = GlobalConfig.page.toString()
@@ -123,6 +127,15 @@ class MainActivity : AppCompatActivity() {
          binding.btnEraser.setOnClickListener {
              GlobalConfig.sMode = 1
          }*/
+
+        binding.btnSelect.setOnClickListener {
+            modeSelected = !modeSelected
+            if(modeSelected){
+                it.setBackgroundColor(getColor(R.color.red))
+            }else{
+                it.setBackgroundColor(getColor(R.color.white))
+            }
+        }
 
         binding.orbysMenu.setOnClickListener {
             binding.llMenu.isVisible = !binding.llMenu.isVisible
@@ -422,9 +435,6 @@ class MainActivity : AppCompatActivity() {
             binding.llMenu.isVisible = false
         }
     }
-
-
-
 
     override fun onStart() {
         super.onStart()
