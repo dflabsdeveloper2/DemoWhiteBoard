@@ -1,7 +1,5 @@
 package com.orbys.demowhiteboard.ui.fragment
 
-import android.content.Intent
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,16 +11,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import coil.ImageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
 import com.orbys.demowhiteboard.R
-import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.core.Util
 import com.orbys.demowhiteboard.core.hideKeyboard
 import com.orbys.demowhiteboard.data.api.RetrofitClient
 import com.orbys.demowhiteboard.data.api.model.ImageModel
-import com.orbys.demowhiteboard.data.api.model.image.ListImageModelApi
 import com.orbys.demowhiteboard.databinding.FragmentGoogleImagesBinding
 import com.orbys.demowhiteboard.ui.adapter.AdapterGoogle
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +28,11 @@ class GoogleImagesFragment : Fragment() {
     private lateinit var adapterGoogle: AdapterGoogle
 
     private lateinit var listImages: MutableList<ImageModel>
+
+    companion object{
+        const val KEY_RESULT_GOOGLE = "key_google_images_result"
+        const val KEY_URL_GOOGLE = "url_google_image"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -65,18 +63,10 @@ class GoogleImagesFragment : Fragment() {
         adapterGoogle = AdapterGoogle(listOf()) {
             Toast.makeText(context, it.title,Toast.LENGTH_SHORT).show()
 
-            lifecycleScope.launch(Dispatchers.IO){
-                val loader = ImageLoader(requireContext())
-                val request = ImageRequest.Builder(requireContext())
-                    .data(it.url)
-                    .allowHardware(false) // Disable hardware bitmaps.
-                    .build()
+            val result = Bundle()
+            result.putString(KEY_URL_GOOGLE, it.url)
 
-                val result = (loader.execute(request) as SuccessResult).drawable
-                val bitmap = (result as BitmapDrawable).bitmap
-
-                Log.d("BITMAP","bitmap: $bitmap")
-            }
+            requireActivity().supportFragmentManager.setFragmentResult(KEY_RESULT_GOOGLE, result)
         }
 
         binding.rvGoogle.apply {

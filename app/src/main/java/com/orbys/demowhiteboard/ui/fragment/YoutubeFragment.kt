@@ -1,6 +1,5 @@
 package com.orbys.demowhiteboard.ui.fragment
 
-import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -20,11 +19,6 @@ import com.orbys.demowhiteboard.data.api.model.YoutubeModel
 import com.orbys.demowhiteboard.data.api.model.youtube.ListVideoModelApi
 import com.orbys.demowhiteboard.databinding.FragmentYoutubeBinding
 import com.orbys.demowhiteboard.ui.adapter.AdapterYoutube
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.DefaultPlayerUiController
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,8 +30,11 @@ class YoutubeFragment : Fragment() {
 
     private lateinit var adapterYoutube: AdapterYoutube
     private lateinit var listVideos: MutableList<YoutubeModel>
-    private lateinit var activity: Activity
-    private lateinit var myViewerYoutube: YouTubePlayerView
+
+    companion object{
+        const val KEY_RESULT_YOUTUBE = "key_youtube_result"
+        const val KEY_ID_YOUTUBE = "id_youtube"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -61,34 +58,12 @@ class YoutubeFragment : Fragment() {
 
     private fun initRecyclerView() {
         adapterYoutube = AdapterYoutube(listOf()) {
-            Toast.makeText(context, it.id, Toast.LENGTH_SHORT).show()
-            //val myPlayer= activity.findViewById<MyYoutubePlayerView>(R.id.myContainerYoutube)
             Log.d("YOUTUBE", "id: ${it.id}")
-            try {
-                myViewerYoutube.apply {
-                    isVisible = true
 
-                    enableAutomaticInitialization = false
-                    val listenner = object : AbstractYouTubePlayerListener() {
-                        override fun onReady(youTubePlayer: YouTubePlayer) {
-                            // using pre-made custom ui
-                            val defaultPlayerUiController =
-                                DefaultPlayerUiController(this@apply, youTubePlayer)
-                            setCustomPlayerUi(defaultPlayerUiController.rootView)
+            val result = Bundle()
+            result.putString(KEY_ID_YOUTUBE, it.id)
 
-                            Log.d("YOUTUBE", "id: ${it.id}")
-                            youTubePlayer.cueVideo(it.id, 0f)
-                        }
-                    }
-
-                    val options: IFramePlayerOptions =
-                        IFramePlayerOptions.Builder().controls(1).build()
-
-                    initialize(listenner,options)
-                }
-            } catch (e: Exception) {
-                Log.d("YOUTUBE", "Error inicializar $e")
-            }
+            requireActivity().supportFragmentManager.setFragmentResult(KEY_RESULT_YOUTUBE, result)
         }
 
         binding.rvYoutube.apply {
@@ -98,9 +73,7 @@ class YoutubeFragment : Fragment() {
     }
 
     private fun initValues() {
-        activity = requireActivity()
         listVideos = mutableListOf()
-        myViewerYoutube = activity.findViewById(R.id.youtube_player_view)
     }
 
     private fun initListenners() {

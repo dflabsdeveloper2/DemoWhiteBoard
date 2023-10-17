@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -18,6 +19,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import coil.ImageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.google.gson.Gson
 import com.orbys.demowhiteboard.R
 import com.orbys.demowhiteboard.core.GlobalConfig
@@ -32,6 +36,11 @@ import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.orbys.demowhiteboard.ui.dialog.DialogQR
 import com.orbys.demowhiteboard.ui.fragment.GoogleImagesFragment
 import com.orbys.demowhiteboard.ui.fragment.YoutubeFragment
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.DefaultPlayerUiController
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 import com.skg.drawaccelerate.AccelerateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -132,7 +141,9 @@ class MainActivity : AppCompatActivity() {
             modeSelected = !modeSelected
             if(modeSelected){
                 it.setBackgroundColor(getColor(R.color.red))
+                binding.videoOverlayView.setMovementMode()
             }else{
+                binding.videoOverlayView.setDrawingMode()
                 it.setBackgroundColor(getColor(R.color.white))
             }
         }
@@ -349,20 +360,89 @@ class MainActivity : AppCompatActivity() {
         binding.btnGoogle.setOnClickListener {
             binding.fContainer.isVisible = !binding.fContainer.isVisible
 
+            val googleFragment = GoogleImagesFragment()
             // Agrega el fragmento al contenedor
             supportFragmentManager.beginTransaction()
-                .replace(R.id.fContainer, GoogleImagesFragment())
-                .commit()
+                .replace(R.id.fContainer, googleFragment)
+                .commitNow()
+
+            if (googleFragment.isAdded) {
+                supportFragmentManager.setFragmentResultListener(
+                    GoogleImagesFragment.KEY_RESULT_GOOGLE, googleFragment.viewLifecycleOwner
+                ) { _, bundle ->
+                    val result = bundle.getString(GoogleImagesFragment.KEY_URL_GOOGLE)
+
+                    if (result.isNullOrBlank()) return@setFragmentResultListener
+
+                    Log.d("RESULT", "result google images url $result")
+
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val loader = ImageLoader(this@MainActivity)
+                        val request = ImageRequest.Builder(this@MainActivity)
+                            .data(result)
+                            .allowHardware(false) // Disable hardware bitmaps.
+                            .build()
+
+                        val resultImage = (loader.execute(request) as SuccessResult).drawable
+                        val bitmap = (resultImage as BitmapDrawable).bitmap
+
+                        Log.d("RESULT", "bitmap: $bitmap")
+                    }
+                }
+            }
         }
 
         binding.btnYoutube.setOnClickListener {
             binding.fContainer.isVisible = !binding.fContainer.isVisible
 
+            val youtubeFragment = YoutubeFragment()
+
             // Agrega el fragmento al contenedor
             supportFragmentManager.beginTransaction()
-                .replace(R.id.fContainer, YoutubeFragment())
-                .commit()
+                .replace(R.id.fContainer, youtubeFragment)
+                .commitNow()
+
+            if (youtubeFragment.isAdded) {
+                supportFragmentManager.setFragmentResultListener(
+                    YoutubeFragment.KEY_RESULT_YOUTUBE, youtubeFragment.viewLifecycleOwner
+                ) { _, bundle ->
+                    val result = bundle.getString(YoutubeFragment.KEY_ID_YOUTUBE)
+
+                    if (result.isNullOrBlank()) return@setFragmentResultListener
+
+                    try {
+                        val youtube = initializeYouTubePlayerView(result)
+                       /* binding.videoOverlayView.setOnLongClickListener {
+                            binding.videoOverlayView.removeYouTubePlayer(youtube)
+                            true
+                        }*/
+                        binding.videoOverlayView.addYouTubePlayer(youtube,0f,0f)
+                    } catch (e: Exception) {
+                        Log.d("YOUTUBE", "Error inicializar $e")
+                    }
+                }
+            }
         }
+    }
+
+    private fun initializeYouTubePlayerView(videoId: String): YouTubePlayerView {
+        val playerView = YouTubePlayerView(this)
+        playerView.enableAutomaticInitialization = false
+        val listenner = object : AbstractYouTubePlayerListener() {
+            override fun onReady(youTubePlayer: YouTubePlayer) {
+                val defaultPlayerUiController =
+                    DefaultPlayerUiController(playerView, youTubePlayer)
+                playerView.setCustomPlayerUi(defaultPlayerUiController.rootView)
+
+                youTubePlayer.cueVideo(videoId, 0f)
+            }
+        }
+        val options: IFramePlayerOptions =
+            IFramePlayerOptions.Builder().controls(1).build()
+
+        playerView.initialize(listenner,options)
+
+        return playerView
     }
 
     private fun initListennersMenu(){

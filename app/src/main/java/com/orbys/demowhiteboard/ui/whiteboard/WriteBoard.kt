@@ -1,7 +1,6 @@
 package com.orbys.demowhiteboard.ui.whiteboard
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.util.AttributeSet
 import android.util.Log
@@ -20,7 +19,6 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
     private val mDrawLineDistribute: DrawLineDistribute = DrawLineDistribute(mController)
     private val mEraserDistribute: EraserDistribute = EraserDistribute(mController)
     private var mActiveDistribute: Distribute = mDrawLineDistribute
-
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
