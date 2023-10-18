@@ -83,12 +83,12 @@ class GoogleImagesFragment : Fragment() {
                     Log.d("GOOGLE","CLICK")
                     v.hideKeyboard()
                     listImages.clear()
-                    binding.pbLoading.isVisible = true
                     // Do something when the user presses "Done"
                     val wordSearch = binding.etSearchImages.text.toString()
                     val licenseCheck = binding.swLicense.isChecked
                     val safeSearchCheck = binding.swLicense.isChecked
                     if (wordSearch.isNotBlank()) {
+                        binding.pbLoading.isVisible = true
                         lifecycleScope.launch {
 
                             val apikey = context?.resources?.getString(R.string.api_key).orEmpty()

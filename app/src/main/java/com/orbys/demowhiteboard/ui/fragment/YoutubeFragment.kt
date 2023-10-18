@@ -82,11 +82,11 @@ class YoutubeFragment : Fragment() {
             when (actionId) {
                 EditorInfo.IME_ACTION_GO -> {
                     v.hideKeyboard()
-                    binding.pbLoading.isVisible = true
                     listVideos.clear()
                     // Do something when the user presses "Done"
                     val wordSearch = binding.etSearchYoutube.text.toString()
                     if (wordSearch.isNotBlank()) {
+                        binding.pbLoading.isVisible = true
                         lifecycleScope.launch {
                             val apikey =
                                 context?.resources?.getString(R.string.api_key_youtube).orEmpty()
