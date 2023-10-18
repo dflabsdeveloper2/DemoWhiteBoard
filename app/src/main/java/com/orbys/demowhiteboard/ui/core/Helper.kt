@@ -1,5 +1,6 @@
 package com.orbys.demowhiteboard.ui.core
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.pdf.PdfDocument
@@ -65,6 +66,12 @@ object Helper {
         }catch (e: Exception) {
             Log.d("Export", "Error crear PDF")
         }
+    }
+
+    // Función para convertir dp a píxeles
+    fun dpToPx(dp: Int,context: Context): Int {
+        val density = context.resources.displayMetrics.density
+        return (dp * density).toInt()
     }
 
     /*fun convertBitmapToPdf(bitmap: Bitmap, file: File,pag:Int): Boolean {

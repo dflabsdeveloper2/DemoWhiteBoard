@@ -5,9 +5,12 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
+import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 
@@ -51,7 +54,19 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
             layoutParams.leftMargin = x.toInt()
             layoutParams.topMargin = y.toInt()
             addView(youTubePlayerView, layoutParams)
-            //addView(youTubePlayerView, createLayoutParams(video))
+
+            // Añade el icono de borrar al YouTubePlayerView con los márgenes y tamaño deseados
+            val deleteImageView = ImageView(context)
+            deleteImageView.setImageResource(android.R.drawable.ic_delete)
+
+            val deleteLayoutParams = LayoutParams(Helper.dpToPx(20,context), Helper.dpToPx(20,context))
+            deleteLayoutParams.gravity = Gravity.END or Gravity.TOP  // Posiciona en la esquina superior derecha
+
+            youTubePlayerView.addView(deleteImageView, deleteLayoutParams)
+            deleteImageView.setOnClickListener {
+                Log.d("ICONO", "borrar")
+                removeYouTubePlayer(video)
+            }
         }
     }
 
@@ -91,10 +106,12 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
         video.viewer.layoutParams = layoutParams
     }
 
-    fun removeYouTubePlayer(video: YoutubeVideo) {
+    private fun removeYouTubePlayer(video: YoutubeVideo) {
         removeView(video.viewer)
         youtubeVideos.remove(video)
         selectedVideo = null
+
+        invalidate()
     }
 
     fun clearListYoutube() {
