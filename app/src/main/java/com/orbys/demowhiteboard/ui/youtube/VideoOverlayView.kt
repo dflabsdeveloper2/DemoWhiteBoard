@@ -32,7 +32,7 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
         isMoveModeEnabled = false
     }
 
-    fun addYouTubePlayer(youTubePlayerView: YouTubePlayerView, x: Float, y: Float) {
+    fun addYouTubePlayer(youTubePlayerView: YouTubePlayerView, x: Float, y: Float, page:Int) {
         if (youtubeVideos.size < 3) {
             Log.d("YOUTUBE", "add youtube")
             val video = YoutubeVideo(
@@ -43,7 +43,8 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                 400,
                 0f,
                 1f,
-                1f
+                1f,
+                page
             )
             youtubeVideos.add(video)
             val layoutParams = LayoutParams(video.width, LayoutParams.WRAP_CONTENT)
@@ -65,8 +66,8 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                 video.viewer.layoutParams = layoutParams
 
                 video.viewer.rotation = video.rotation
-                video.viewer.scaleX = video.scaleX
-                video.viewer.scaleY = video.scaleY
+                video.viewer.scaleX = video.scaleX.coerceIn(1f,3f)
+                video.viewer.scaleY = video.scaleY.coerceIn(1f,3f)
 
                 addView(video.viewer)
                 youtubeVideos.add(video)
@@ -135,37 +136,34 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                     if (event.pointerCount > 1) {
                         // Calcula la nueva distancia entre los dedos para escalar
                         val newSpacing = getFingerSpacing(event)
-                        Log.d("YOUTUBE", "init finger space= $initialFingerSpacing")
-                        Log.d("YOUTUBE", "finger space= $newSpacing")
+
                         // Calcula el factor de escala basado en las distancias inicial y actual
                         if (newSpacing > 0 && initialFingerSpacing > 0) {
-                            var scaleFactor = newSpacing / initialFingerSpacing
-                            Log.d("YOUTUBE", "scale factor= $scaleFactor")
                             // Aplica el escalado al video dentro de los límites mínimo y máximo
                             selectedVideo?.let { video ->
-                                val scaleFactor = (newSpacing / (initialFingerSpacing*100)).coerceIn(1f, 3f)
-                                val newScaleX = scaleFactor
-                                val newScaleY = scaleFactor
+                                val scaleFactor =
+                                    (newSpacing / (initialFingerSpacing * 100)).coerceIn(1f, 3f)
 
-                                video.scaleX = newScaleX
-                                video.scaleY = newScaleY
+                                video.scaleX = scaleFactor
+                                video.scaleY = scaleFactor
 
-                                Log.d("DEBUG", "YouTubePlayerView - Width: ${video.width}, Height: ${video.height}, X: ${video.x}, Y: ${video.y}")
+                                // Calcula el desplazamiento en las coordenadas x y y después del escalado
+                                val deltaX = video.x + video.width * (scaleFactor - video.scaleX) / 2 - video.x
+                                val deltaY = video.y + video.height * (scaleFactor - video.scaleY) / 2 - video.y
 
-                                // Ajusta las coordenadas x y y para mantener la posición visualmente constante después del escalado
-                                val deltaX = video.x * (video.scaleX / initialScaleX - 1)
-                                val deltaY = video.y * (video.scaleY / initialScaleY - 1)
-                                video.x -= deltaX
-                                video.y -= deltaY
+                                // Ajusta las coordenadas x y y para mantener el margen y evitar que se salgan de la pantalla
+                                val limitedX = (video.x - deltaX).coerceIn(marginThreshold.toFloat(), (width - video.width - marginThreshold).toFloat())
+                                val limitedY = (video.y - deltaY).coerceIn(marginThreshold.toFloat(), (height - video.height - marginThreshold).toFloat())
 
-                                Log.d("YOUTUBE", "X ${video.x} Y ${video.y}")
+                                // Aplica el escalado y ajusta las coordenadas
+                                video.x = limitedX
+                                video.y = limitedY
+
                                 val layoutParams = video.viewer.layoutParams as LayoutParams
                                 layoutParams.width = (video.width * video.scaleX).toInt()
                                 layoutParams.height = (video.height * video.scaleY).toInt()
-                                Log.d(
-                                    "YOUTUBE",
-                                    "layoutParams X ${layoutParams.width} Y ${layoutParams.height}"
-                                )
+                                layoutParams.leftMargin = video.x.toInt()
+                                layoutParams.topMargin = video.y.toInt()
                                 video.viewer.layoutParams = layoutParams
                             }
                         }
@@ -200,19 +198,28 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
 
     private fun findSelectedVideo(x: Float, y: Float): YoutubeVideo? {
         for (video in youtubeVideos) {
-            if (isViewContains(video.viewer, x.toInt(), y.toInt())) {
+            if (isViewContains(video.viewer, x, y)) {
                 return video
             }
         }
         return null
     }
 
-    private fun isViewContains(view: View, x: Int, y: Int): Boolean {
+    private fun isViewContains(view: View, x: Float, y: Float): Boolean {
         val location = IntArray(2)
         view.getLocationOnScreen(location)
-        val rect =
-            Rect(location[0], location[1], location[0] + view.width, location[1] + view.height)
-        return rect.contains(x, y)
+
+        // Ajusta las coordenadas de los puntos táctiles de acuerdo con el escalado
+        val scaledX = x / view.scaleX
+        val scaledY = y / view.scaleY
+
+        val rect = Rect(
+            location[0],
+            location[1],
+            (location[0] + view.width * view.scaleX).toInt(),
+            (location[1] + view.height * view.scaleY).toInt()
+        )
+        return rect.contains(scaledX.toInt(), scaledY.toInt())
     }
 
     private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {

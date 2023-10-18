@@ -36,6 +36,7 @@ import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.orbys.demowhiteboard.ui.dialog.DialogQR
 import com.orbys.demowhiteboard.ui.fragment.GoogleImagesFragment
 import com.orbys.demowhiteboard.ui.fragment.YoutubeFragment
+import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.DefaultPlayerUiController
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
@@ -57,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var myBitmapsFromWhiteboard:MutableMap<Int,Bitmap>
+    private lateinit var myYoutubeVideos:MutableList<YoutubeVideo>
     private var totalPages = 1
 
     companion object {
@@ -116,8 +118,9 @@ class MainActivity : AppCompatActivity() {
         GlobalConfig.listImages = mutableListOf()
 
         myBitmapsFromWhiteboard = mutableMapOf()
+        myYoutubeVideos = mutableListOf()
 
-        binding.tvCurrentPage.text = GlobalConfig.page.toString()
+        binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
         binding.tvTotalPage.text = totalPages.toString()
 
         val files = File(filesDir.absolutePath).listFiles()?.toList()
@@ -193,11 +196,14 @@ class MainActivity : AppCompatActivity() {
                 clean()
             }
             totalPages = 1
-            GlobalConfig.page = 1
+            GlobalConfig.currentPage = 1
             myBitmapsFromWhiteboard.clear()
+            myYoutubeVideos.clear()
+            it.setBackgroundColor(getColor(R.color.white))
+            binding.fContainer.isVisible = false
             myWhiteboard = MyWhiteboard(mutableListOf())
 
-            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+            binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
             binding.tvTotalPage.text = totalPages.toString()
         }
 
@@ -232,7 +238,7 @@ class MainActivity : AppCompatActivity() {
             binding.pbLoading.isVisible = true
 
             val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(binding.whiteboard)
-            myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+            myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
             val intentDialogExport = Intent(this, DialogExport::class.java)
             someActivityResultLauncher.launch(intentDialogExport)
@@ -243,7 +249,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnQr.setOnClickListener {
 
             val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(binding.whiteboard)
-            myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+            myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
             val sortedBitmaps: List<Bitmap> = myBitmapsFromWhiteboard.entries
                 .sortedBy { it.key }  // Ordenar por la clave (INT) de menor a mayor
@@ -267,7 +273,7 @@ class MainActivity : AppCompatActivity() {
             binding.whiteboard.apply {
 
                 val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(this)
-                myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+                myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
                 saveCall { myLine ->
                     if (::myWhiteboard.isInitialized) {
@@ -284,20 +290,32 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            GlobalConfig.page = totalPages
+            GlobalConfig.currentPage = totalPages
 
-            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+            binding.videoOverlayView.apply {
+                val list = getYouTubeVideos()
+                Log.d("MAIN","list-> ${list.size}")
+                if(list.isNotEmpty()){
+                    myYoutubeVideos.removeAll { it.page == list[0].page }
+                    myYoutubeVideos.addAll(list)
+                    clearListYoutube()
+                }
+            }
+            Log.d("MAIN","youtuibelist-> ${myYoutubeVideos.size}")
+            binding.btnSelect.setBackgroundColor(getColor(R.color.white))
+            binding.fContainer.isVisible = false
+            binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
             binding.tvTotalPage.text = totalPages.toString()
             binding.pbLoading.isVisible = false
         }
 
         binding.btnPreviousWhiteboard.setOnClickListener {
             binding.pbLoading.isVisible = true
-            if (GlobalConfig.page > 1) {
+            if (GlobalConfig.currentPage > 1) {
                 binding.whiteboard.apply {
 
                     val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(this)
-                    myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+                    myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
                     saveCall { myLine ->
                         if (::myWhiteboard.isInitialized) {
@@ -313,12 +331,25 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    GlobalConfig.page--
+                    GlobalConfig.currentPage--
 
-                    drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.page })
+                    drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.currentPage })
                 }
 
-                binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                binding.videoOverlayView.apply {
+                    val list = getYouTubeVideos()
+                    Log.d("MAIN","list-> ${list.size}")
+                    if(list.isNotEmpty()){
+                        myYoutubeVideos.removeAll { it.page == list[0].page }
+                        myYoutubeVideos.addAll(list)
+                        clearListYoutube()
+                    }
+                    addListYouTubeVideos(myYoutubeVideos.filter { it.page == GlobalConfig.currentPage })
+                }
+                Log.d("MAIN","youtubelist-> ${myYoutubeVideos.size}")
+                binding.btnSelect.setBackgroundColor(getColor(R.color.white))
+                binding.fContainer.isVisible = false
+                binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
                 binding.tvTotalPage.text = totalPages.toString()
             }
             binding.pbLoading.isVisible = false
@@ -326,11 +357,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnLaterWhiteboard.setOnClickListener {
             binding.pbLoading.isVisible = true
-            if (GlobalConfig.page < totalPages) {
+            if (GlobalConfig.currentPage < totalPages) {
                 binding.whiteboard.apply {
 
                     val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(this)
-                    myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+                    myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
                     saveCall { myLine ->
                         if (::myWhiteboard.isInitialized) {
@@ -346,12 +377,25 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    GlobalConfig.page++
+                    GlobalConfig.currentPage++
 
-                    drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.page })
+                    drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.currentPage })
                 }
 
-                binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                binding.videoOverlayView.apply {
+                    val list = getYouTubeVideos()
+                    Log.d("MAIN","list-> ${list.size}")
+                    if(list.isNotEmpty()){
+                        myYoutubeVideos.removeAll { it.page == list[0].page }
+                        myYoutubeVideos.addAll(list)
+                        clearListYoutube()
+                    }
+                    addListYouTubeVideos(myYoutubeVideos.filter { it.page == GlobalConfig.currentPage })
+                }
+                Log.d("MAIN","youtuibelist-> ${myYoutubeVideos.size} currentpage->${GlobalConfig.currentPage}")
+                binding.btnSelect.setBackgroundColor(getColor(R.color.white))
+                binding.fContainer.isVisible = false
+                binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
                 binding.tvTotalPage.text = totalPages.toString()
             }
             binding.pbLoading.isVisible = false
@@ -416,7 +460,7 @@ class MainActivity : AppCompatActivity() {
                             binding.videoOverlayView.removeYouTubePlayer(youtube)
                             true
                         }*/
-                        binding.videoOverlayView.addYouTubePlayer(youtube,0f,0f)
+                        binding.videoOverlayView.addYouTubePlayer(youtube,0f,0f, page = GlobalConfig.currentPage )
                     } catch (e: Exception) {
                         Log.d("YOUTUBE", "Error inicializar $e")
                     }
@@ -430,9 +474,9 @@ class MainActivity : AppCompatActivity() {
         playerView.enableAutomaticInitialization = false
         val listenner = object : AbstractYouTubePlayerListener() {
             override fun onReady(youTubePlayer: YouTubePlayer) {
-                val defaultPlayerUiController =
+               /* val defaultPlayerUiController =
                     DefaultPlayerUiController(playerView, youTubePlayer)
-                playerView.setCustomPlayerUi(defaultPlayerUiController.rootView)
+                playerView.setCustomPlayerUi(defaultPlayerUiController.rootView)*/
 
                 youTubePlayer.cueVideo(videoId, 0f)
             }
@@ -460,7 +504,7 @@ class MainActivity : AppCompatActivity() {
             binding.pbLoading.isVisible = true
 
             val bitmap = BitmapWhiteboard.getBitmapWhiteBoard(binding.whiteboard)
-            myBitmapsFromWhiteboard[GlobalConfig.page] = bitmap
+            myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
             val intentDialogExport = Intent(this, DialogExport::class.java)
             someActivityResultLauncher.launch(intentDialogExport)
@@ -479,15 +523,16 @@ class MainActivity : AppCompatActivity() {
                         clean()
                     }
                     totalPages = 1
-                    GlobalConfig.page = 1
+                    GlobalConfig.currentPage = 1
                     myWhiteboard = MyWhiteboard(mutableListOf())
                     myBitmapsFromWhiteboard.clear()
+                    myYoutubeVideos.clear()
 
                     binding.llMenu.isVisible = false
 
-                    Log.d("PAGE", "page ${GlobalConfig.page} total $totalPages")
+                    Log.d("PAGE", "page ${GlobalConfig.currentPage} total $totalPages")
 
-                    binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                    binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
                     binding.tvTotalPage.text = totalPages.toString()
                 } else {
                     val intentSave = Intent(this, DialogSaveWhiteboard::class.java)
@@ -624,11 +669,11 @@ class MainActivity : AppCompatActivity() {
                             Helper.writeJsonToInternalFile(json, file)
 
                             totalPages = 1
-                            GlobalConfig.page = 1
+                            GlobalConfig.currentPage = 1
                             myWhiteboard = MyWhiteboard(mutableListOf())
 
 
-                            binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                            binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
                             binding.tvTotalPage.text = totalPages.toString()
                             binding.pbLoading.isVisible = false
                         }
@@ -638,7 +683,7 @@ class MainActivity : AppCompatActivity() {
                         val data: Intent? = result.data
                         val dataString = data?.getStringExtra("fileOpen").orEmpty()
 
-                        GlobalConfig.page = 1
+                        GlobalConfig.currentPage = 1
                         totalPages = 1
                         myWhiteboard = MyWhiteboard(lines = mutableListOf())
 
@@ -663,7 +708,7 @@ class MainActivity : AppCompatActivity() {
                             e.printStackTrace()
                         }
 
-                        binding.tvCurrentPage.text = GlobalConfig.page.toString()
+                        binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
                         binding.tvTotalPage.text = totalPages.toString()
                     }
 
@@ -697,7 +742,7 @@ class MainActivity : AppCompatActivity() {
                             try {
                                 if (format == null) {
                                     if (onlyCurrentPage) {
-                                        val bitmap = myBitmapsFromWhiteboard[GlobalConfig.page]
+                                        val bitmap = myBitmapsFromWhiteboard[GlobalConfig.currentPage]
                                         bitmap?.let {
                                             Helper.createPdfWithBitmaps(
                                                 listOf(it),
@@ -716,7 +761,7 @@ class MainActivity : AppCompatActivity() {
                                 } else {
                                     myBitmapsFromWhiteboard.forEach { (page, whiteboard) ->
                                         if (onlyCurrentPage) {
-                                            if (GlobalConfig.page == page) {
+                                            if (GlobalConfig.currentPage == page) {
                                                 val file = File(
                                                     fileExported + extension
                                                 )

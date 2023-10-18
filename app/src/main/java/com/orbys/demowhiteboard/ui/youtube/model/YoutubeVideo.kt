@@ -10,5 +10,6 @@ data class YoutubeVideo(
     var height: Int,
     var rotation: Float,
     var scaleX: Float,
-    var scaleY: Float
+    var scaleY: Float,
+    var page:Int
 )

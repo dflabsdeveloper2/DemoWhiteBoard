@@ -24,7 +24,7 @@ object GlobalConfig {
 
     var backgroundColor:Int? = defaultBackgroundColor
     var backgroundWallpaper: String? = null
-    var page = 1
+    var currentPage = 1
     var listImages:MutableList<Bitmap>? = null
 
 

@@ -3,9 +3,6 @@ package com.orbys.demowhiteboard.ui.whiteboard
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.graphics.Rect
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -147,7 +144,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
                 GlobalConfig.backgroundWallpaper = obj.backgroundWallpaper
                 GlobalConfig.backgroundColor = obj.backgroundColor
-                GlobalConfig.page = obj.page
+                GlobalConfig.currentPage = obj.page
 
                 val lineDraw = obj.listLines
 
@@ -278,7 +275,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 GlobalConfig.backgroundWallpaper,
                 GlobalConfig.backgroundColor,
                 123,
-                GlobalConfig.page
+                GlobalConfig.currentPage
             )
         )
         mHandler.obtainMessage(WriteCommand.CLEAN).sendToTarget()
