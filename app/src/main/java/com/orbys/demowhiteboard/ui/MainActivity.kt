@@ -334,6 +334,9 @@ class MainActivity : AppCompatActivity() {
                     GlobalConfig.currentPage--
 
                     drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.currentPage })
+
+                    addImage(GlobalConfig.listImages?.filter { it.page == GlobalConfig.currentPage }
+                        .orEmpty())
                 }
 
                 binding.videoOverlayView.apply {
@@ -380,6 +383,9 @@ class MainActivity : AppCompatActivity() {
                     GlobalConfig.currentPage++
 
                     drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.currentPage })
+
+                    addImage(GlobalConfig.listImages?.filter { it.page == GlobalConfig.currentPage }
+                        .orEmpty())
                 }
 
                 binding.videoOverlayView.apply {
