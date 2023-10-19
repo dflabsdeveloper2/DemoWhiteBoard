@@ -12,7 +12,8 @@ data class MyLines(
     var backgroundWallpaper:String?,
     var backgroundColor: Int?,
     var video: Int,
-    var page: Int
+    var page: Int,
+    /*var youtube:String*/
 )
 
 data class MyLine(var line: List<PointF>?,var lineEraser: List<RectF?>?, val props: MyPaint){

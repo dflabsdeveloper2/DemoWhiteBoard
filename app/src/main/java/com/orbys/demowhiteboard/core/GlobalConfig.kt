@@ -3,6 +3,7 @@ package com.orbys.demowhiteboard.core
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import com.orbys.demowhiteboard.ui.model.ImageBitmap
 
 object GlobalConfig {
 
@@ -25,7 +26,7 @@ object GlobalConfig {
     var backgroundColor:Int? = defaultBackgroundColor
     var backgroundWallpaper: String? = null
     var currentPage = 1
-    var listImages:MutableList<Bitmap>? = null
+    var listImages:MutableList<ImageBitmap>? = null
 
 
     var backgroundBitmap: Bitmap = Bitmap.createBitmap(
@@ -43,4 +44,7 @@ object GlobalConfig {
     var penWidthGrueso = 60f
     var penColorFino = Color.RED
     var penColorGrueso = Color.BLACK
+
+    const val numMaxYoutubePage = 3
+    const val numMaxImagesPage = 5
 }

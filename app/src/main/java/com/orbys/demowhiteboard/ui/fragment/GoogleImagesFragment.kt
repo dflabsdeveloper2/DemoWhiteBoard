@@ -61,8 +61,6 @@ class GoogleImagesFragment : Fragment() {
 
     private fun initReciclerView() {
         adapterGoogle = AdapterGoogle(listOf()) {
-            Toast.makeText(context, it.title,Toast.LENGTH_SHORT).show()
-
             val result = Bundle()
             result.putString(KEY_URL_GOOGLE, it.url)
 

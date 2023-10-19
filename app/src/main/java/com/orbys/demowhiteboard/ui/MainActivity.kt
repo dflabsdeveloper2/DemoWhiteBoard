@@ -36,8 +36,8 @@ import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.orbys.demowhiteboard.ui.dialog.DialogQR
 import com.orbys.demowhiteboard.ui.fragment.GoogleImagesFragment
 import com.orbys.demowhiteboard.ui.fragment.YoutubeFragment
+import com.orbys.demowhiteboard.ui.model.ImageBitmap
 import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.DefaultPlayerUiController
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
@@ -420,17 +420,39 @@ class MainActivity : AppCompatActivity() {
 
                     Log.d("RESULT", "result google images url $result")
 
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        val loader = ImageLoader(this@MainActivity)
-                        val request = ImageRequest.Builder(this@MainActivity)
-                            .data(result)
-                            .allowHardware(false) // Disable hardware bitmaps.
-                            .build()
+                    val listImagesSizeInCurrentPage =
+                        GlobalConfig.listImages?.filter { it.page == GlobalConfig.currentPage }?.size
+                            ?: 0
 
-                        val resultImage = (loader.execute(request) as SuccessResult).drawable
-                        val bitmap = (resultImage as BitmapDrawable).bitmap
+                    if (listImagesSizeInCurrentPage < GlobalConfig.numMaxImagesPage) {
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            val loader = ImageLoader(this@MainActivity)
+                            val request = ImageRequest.Builder(this@MainActivity)
+                                .data(result)
+                                .allowHardware(false) // Disable hardware bitmaps.
+                                .build()
 
-                        Log.d("RESULT", "bitmap: $bitmap")
+                            val resultImage = (loader.execute(request) as SuccessResult).drawable
+                            val bitmap = (resultImage as BitmapDrawable).bitmap
+
+                            Log.d("RESULT", "bitmap: $bitmap")
+
+                            GlobalConfig.listImages?.add(
+                                ImageBitmap(
+                                    bitmap,
+                                    GlobalConfig.currentPage
+                                )
+                            )
+
+                            withContext(Dispatchers.Main) {
+                                binding.whiteboard.addImage(GlobalConfig.listImages?.filter { it.page == GlobalConfig.currentPage }
+                                    .orEmpty())
+                            }
+
+                            Log.d("RESULT", "list images: ${GlobalConfig.listImages?.size}")
+                        }
+                    } else {
+                        Toast.makeText(this, "Numero maximo de imagenes", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -469,14 +491,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //TODO: Inicializar en el FrameLayout
     private fun initializeYouTubePlayerView(videoId: String): YouTubePlayerView {
         val playerView = YouTubePlayerView(this)
         playerView.enableAutomaticInitialization = false
         val listenner = object : AbstractYouTubePlayerListener() {
             override fun onReady(youTubePlayer: YouTubePlayer) {
-               /* val defaultPlayerUiController =
-                    DefaultPlayerUiController(playerView, youTubePlayer)
-                playerView.setCustomPlayerUi(defaultPlayerUiController.rootView)*/
+                /* val defaultPlayerUiController =
+                     DefaultPlayerUiController(playerView, youTubePlayer)
+                 playerView.setCustomPlayerUi(defaultPlayerUiController.rootView)*/
 
                 youTubePlayer.cueVideo(videoId, 0f)
             }

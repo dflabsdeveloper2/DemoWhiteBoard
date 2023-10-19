@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
+import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
@@ -36,7 +37,7 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
     }
 
     fun addYouTubePlayer(youTubePlayerView: YouTubePlayerView, x: Float, y: Float, page:Int) {
-        if (youtubeVideos.size < 3) {
+        if (youtubeVideos.size < GlobalConfig.numMaxYoutubePage) {
             Log.d("YOUTUBE", "add youtube")
             val video = YoutubeVideo(
                 youTubePlayerView,
@@ -72,7 +73,7 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
 
     fun addListYouTubeVideos(videoList: List<YoutubeVideo>) {
         youtubeVideos.clear()
-        if(videoList.size<3){
+        if (videoList.size < GlobalConfig.numMaxYoutubePage) {
             for (video in videoList) {
                 // Añade el video al FrameLayout
                 val layoutParams = LayoutParams(video.width, video.height)
@@ -81,8 +82,8 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                 video.viewer.layoutParams = layoutParams
 
                 video.viewer.rotation = video.rotation
-                video.viewer.scaleX = video.scaleX.coerceIn(1f,3f)
-                video.viewer.scaleY = video.scaleY.coerceIn(1f,3f)
+                video.viewer.scaleX = video.scaleX.coerceIn(1f, 3f)
+                video.viewer.scaleY = video.scaleY.coerceIn(1f, 3f)
 
                 addView(video.viewer)
                 youtubeVideos.add(video)

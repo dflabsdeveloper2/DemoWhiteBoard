@@ -3,6 +3,7 @@ package com.orbys.demowhiteboard.ui.whiteboard
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Rect
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -19,6 +20,7 @@ import com.orbys.demowhiteboard.domain.model.MyLine
 import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.domain.model.MyPaint
 import com.orbys.demowhiteboard.ui.core.Helper
+import com.orbys.demowhiteboard.ui.model.ImageBitmap
 import com.skg.drawaccelerate.AccelerateManager
 
 class WriteBoardController(private val context:Context, private val callBack: () -> Unit) : Handler.Callback {
@@ -64,8 +66,12 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         mHandler.obtainMessage(WriteCommand.REDO).sendToTarget()
     }
 
-    fun undoAction(){
+    fun undoAction() {
         mHandler.obtainMessage(WriteCommand.UNDO).sendToTarget()
+    }
+
+    fun addImageBitmap(data: List<ImageBitmap>) {
+        mHandler.obtainMessage(WriteCommand.DRAW_BITMAP, data).sendToTarget()
     }
 
     override fun handleMessage(msg: Message): Boolean {
@@ -207,6 +213,59 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             WriteCommand.CLEAN -> {
                 //mStrokesCanvas?.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
                 clear()
+            }
+
+            WriteCommand.DRAW_BITMAP -> {
+                val obj = msg.obj as? List<ImageBitmap> ?: return true
+                val data: List<ImageBitmap> = obj
+
+                if (data.isEmpty()) return true
+
+                var x = 50 // Posición inicial X
+                var y = 50 // Posición Y fija para todos los bitmaps
+                val padding = 50
+
+                data.forEach { imageBitmap ->
+                    val originalWidth = imageBitmap.image.width.toFloat()
+                    val originalHeight = imageBitmap.image.height.toFloat()
+
+                    val maxWidth = 1000f // Ancho máximo permitido
+                    val maxHeight = 1000f // Altura máxima permitida
+
+                    // Calcula las proporciones para ajustar el ancho y el alto del bitmap
+                    val ratio = originalWidth / originalHeight
+                    var newWidth = if (originalWidth > maxWidth) maxWidth else originalWidth
+                    var newHeight = newWidth / ratio
+
+                    // Verifica si la altura supera el límite permitido
+                    if (newHeight > maxHeight) {
+                        val scaleRatio = maxHeight / newHeight
+                        newHeight *= scaleRatio
+                        newWidth *= scaleRatio
+                    }
+
+                    //verificar fila
+                    if (x + newWidth > GlobalConfig.SCREEN_WIDTH) {
+                        y = (maxHeight + 50).toInt()
+                        x = 50
+                    }
+
+                    // Crea el rectángulo de destino con la posición X actual, posición Y y tamaño del bitmap ajustado
+                    val dstRect = Rect(
+                        x,
+                        y,
+                        (x + newWidth).toInt(),
+                        (y + newHeight).toInt()
+                    )
+
+                    // Dibuja el bitmap en el canvas en la posición y tamaño especificados
+                    mStrokesCanvas?.drawBitmap(imageBitmap.image, null, dstRect, null)
+
+                    // Actualiza la posición X para la próxima iteración
+                    x += (maxWidth + padding * 2).toInt()// Mueve la posición X al final del bitmap dibujado el 50 es el espaciado
+                }
+
+                render()
             }
 
             WriteCommand.DRAW_LINE_ACCELERATE -> {
