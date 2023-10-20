@@ -437,8 +437,17 @@ class MainActivity : AppCompatActivity() {
                                 .data(result)
                                 .allowHardware(false) // Disable hardware bitmaps.
                                 .build()
+                            val resultImage =
+                                try {
+                                    (loader.execute(request) as SuccessResult).drawable
+                                }catch(e:Exception) {
+                                    Log.d(
+                                        "RESULT",
+                                        "Error exception executer request load image: $e"
+                                    )
+                                    null
+                                } ?: return@launch
 
-                            val resultImage = (loader.execute(request) as SuccessResult).drawable
                             val bitmap = (resultImage as BitmapDrawable).bitmap
 
                             Log.d("RESULT", "bitmap: $bitmap")
