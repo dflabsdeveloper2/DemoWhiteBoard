@@ -3,7 +3,7 @@ package com.orbys.demowhiteboard.core
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import com.orbys.demowhiteboard.domain.model.ImageBitmap
+import com.orbys.demowhiteboard.domain.model.MyWhiteboard
 
 object GlobalConfig {
 
@@ -23,7 +23,8 @@ object GlobalConfig {
     const val defaultBackgroundColor: Int = -0xffa6b0
 
 
-    var backgroundColor:Int? = defaultBackgroundColor
+    var listMyWhiteBoard: MyWhiteboard? = null
+    var backgroundColor: Int? = defaultBackgroundColor
     var backgroundWallpaper: String? = null
     var currentPage = 1
 

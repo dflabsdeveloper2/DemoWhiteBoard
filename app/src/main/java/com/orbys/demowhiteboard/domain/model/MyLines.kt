@@ -5,7 +5,12 @@ import android.graphics.PointF
 import android.graphics.RectF
 
 
-data class MyWhiteboard(var lines:MutableList<MyLines>)
+data class MyWhiteboard(var lines: MutableList<MyLines>) {
+    fun getAllImageBitmap(): List<ImageBitmap2> {
+        return lines.flatMap { myLines -> myLines.listLines }
+            .mapNotNull { myLine -> myLine.imageBitmap }
+    }
+}
 
 data class MyLines(
     var listLines: List<MyLine>,

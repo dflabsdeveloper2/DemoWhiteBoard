@@ -50,16 +50,15 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
 
-
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
-    private lateinit var myWhiteboard: MyWhiteboard
+    private var myWhiteboard: MyWhiteboard? = null
     private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
 
-    private lateinit var myBitmapsFromWhiteboard:MutableMap<Int,Bitmap>
-    private lateinit var myYoutubeVideos:MutableList<YoutubeVideo>
-    private lateinit var listImages:MutableList<ImageBitmap>
+    private lateinit var myBitmapsFromWhiteboard: MutableMap<Int, Bitmap>
+    private lateinit var myYoutubeVideos: MutableList<YoutubeVideo>
+    private lateinit var listImages: MutableList<ImageBitmap>
 
     private var totalPages = 1
 
@@ -117,6 +116,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initValues() {
+        myWhiteboard = MyWhiteboard(lines = mutableListOf())
         listImages = mutableListOf()
 
         myBitmapsFromWhiteboard = mutableMapOf()
@@ -144,9 +144,24 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnSelect.setOnClickListener {
             modeSelected = !modeSelected
-            if(modeSelected){
+            if (modeSelected) {
                 it.setBackgroundColor(getColor(R.color.red))
                 binding.videoOverlayView.setMovementMode()
+
+                binding.whiteboard.apply {
+                    getLines { myLine ->
+                        myWhiteboard?.let { whiteboard ->
+                            if (whiteboard.lines.none { it.page == myLine.page }) {
+                                whiteboard.lines.add(myLine)
+                            } else {
+                                whiteboard.lines.removeAll { it.page == myLine.page }
+                                whiteboard.lines.add(myLine)
+                            }
+                        }
+                    }
+
+                    GlobalConfig.listMyWhiteBoard = myWhiteboard
+                }
             }else{
                 binding.videoOverlayView.setDrawingMode()
                 it.setBackgroundColor(getColor(R.color.white))
@@ -279,16 +294,13 @@ class MainActivity : AppCompatActivity() {
                 myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
                 saveCall { myLine ->
-                    if (::myWhiteboard.isInitialized) {
-                        if (myWhiteboard.lines.none { it.page == myLine.page }) {
-                            myWhiteboard.lines.add(myLine)
+                    myWhiteboard?.let { whiteboard ->
+                        if (whiteboard.lines.none { it.page == myLine.page }) {
+                            whiteboard.lines.add(myLine)
                         } else {
-                            myWhiteboard.lines.removeAll { it.page == myLine.page }
-                            myWhiteboard.lines.add(myLine)
+                            whiteboard.lines.removeAll { it.page == myLine.page }
+                            whiteboard.lines.add(myLine)
                         }
-                    } else {
-                        myWhiteboard = MyWhiteboard(lines = mutableListOf())
-                        myWhiteboard.lines.add(myLine)
                     }
                 }
             }
@@ -321,22 +333,21 @@ class MainActivity : AppCompatActivity() {
                     myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
                     saveCall { myLine ->
-                        if (::myWhiteboard.isInitialized) {
-                            if (myWhiteboard.lines.none { it.page == myLine.page }) {
-                                myWhiteboard.lines.add(myLine)
+                        myWhiteboard?.let { whiteboard ->
+                            if (whiteboard.lines.none { it.page == myLine.page }) {
+                                whiteboard.lines.add(myLine)
                             } else {
-                                myWhiteboard.lines.removeAll { it.page == myLine.page }
-                                myWhiteboard.lines.add(myLine)
+                                whiteboard.lines.removeAll { it.page == myLine.page }
+                                whiteboard.lines.add(myLine)
                             }
-                        } else {
-                            myWhiteboard = MyWhiteboard(lines = mutableListOf())
-                            myWhiteboard.lines.add(myLine)
                         }
                     }
 
                     GlobalConfig.currentPage--
 
-                    drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.currentPage })
+                    myWhiteboard?.let {
+                        drawSavedJson(it.lines.first { it.page == GlobalConfig.currentPage })
+                    }
                 }
 
                 binding.videoOverlayView.apply {
@@ -367,22 +378,21 @@ class MainActivity : AppCompatActivity() {
                     myBitmapsFromWhiteboard[GlobalConfig.currentPage] = bitmap
 
                     saveCall { myLine ->
-                        if (::myWhiteboard.isInitialized) {
-                            if (myWhiteboard.lines.none { it.page == myLine.page }) {
-                                myWhiteboard.lines.add(myLine)
+                        myWhiteboard?.let { whiteboard ->
+                            if (whiteboard.lines.none { it.page == myLine.page }) {
+                                whiteboard.lines.add(myLine)
                             } else {
-                                myWhiteboard.lines.removeAll { it.page == myLine.page }
-                                myWhiteboard.lines.add(myLine)
+                                whiteboard.lines.removeAll { it.page == myLine.page }
+                                whiteboard.lines.add(myLine)
                             }
-                        } else {
-                            myWhiteboard = MyWhiteboard(lines = mutableListOf())
-                            myWhiteboard.lines.add(myLine)
                         }
                     }
 
                     GlobalConfig.currentPage++
 
-                    drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.currentPage })
+                    myWhiteboard?.let {
+                        drawSavedJson(it.lines.first { it.page == GlobalConfig.currentPage })
+                    }
                 }
 
                 binding.videoOverlayView.apply {
@@ -689,16 +699,13 @@ class MainActivity : AppCompatActivity() {
                             Log.d("SAVE", "file: ${file.absolutePath}")
                             binding.pbLoading.isVisible = true
                             binding.whiteboard.saveCall { myLine ->
-                                if (::myWhiteboard.isInitialized) {
-                                    if (myWhiteboard.lines.none { it.page == myLine.page }) {
-                                        myWhiteboard.lines.add(myLine)
+                                myWhiteboard?.let { whiteboard ->
+                                    if (whiteboard.lines.none { it.page == myLine.page }) {
+                                        whiteboard.lines.add(myLine)
                                     } else {
-                                        myWhiteboard.lines.removeAll { it.page == myLine.page }
-                                        myWhiteboard.lines.add(myLine)
+                                        whiteboard.lines.removeAll { it.page == myLine.page }
+                                        whiteboard.lines.add(myLine)
                                     }
-                                } else {
-                                    myWhiteboard = MyWhiteboard(lines = mutableListOf())
-                                    myWhiteboard.lines.add(myLine)
                                 }
                             }
 
@@ -737,7 +744,7 @@ class MainActivity : AppCompatActivity() {
                                     gson.fromJson(fileReader, MyWhiteboard::class.java)
                                 binding.whiteboard.drawSavedJson(myDataClass.lines.first { it.page == 1 })
                                 myWhiteboard = myDataClass
-                                totalPages = myWhiteboard.lines.maxOf { it.page }
+                                totalPages = myWhiteboard?.lines?.maxOf { it.page } ?: 1
                             } else {
                                 Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT)
                                     .show()
@@ -851,3 +858,4 @@ class MainActivity : AppCompatActivity() {
             }
     }
 }
+

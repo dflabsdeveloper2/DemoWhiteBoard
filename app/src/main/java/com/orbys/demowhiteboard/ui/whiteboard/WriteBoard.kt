@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.orbys.demowhiteboard.core.GlobalConfig
+import com.orbys.demowhiteboard.domain.drawimage.ImageBitmapDistribute
 import com.orbys.demowhiteboard.domain.drawline.DrawLineDistribute
 import com.orbys.demowhiteboard.domain.eraser.EraserDistribute
 import com.orbys.demowhiteboard.domain.model.MyLines
@@ -19,6 +20,7 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
     private val mController = WriteBoardController(context) { this.postInvalidate() }
     private val mDrawLineDistribute: DrawLineDistribute = DrawLineDistribute(mController)
     private val mEraserDistribute: EraserDistribute = EraserDistribute(mController)
+    private val mImageBitmapDistribute:ImageBitmapDistribute = ImageBitmapDistribute(mController)
     private var mActiveDistribute: Distribute = mDrawLineDistribute
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -31,11 +33,9 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
         val actionMasked: Int = event.actionMasked
         val size = event.size
         if (actionMasked == MotionEvent.ACTION_DOWN) {
+
             mActiveDistribute = if (MainActivity.modeSelected) {
-               /* GlobalConfig.sMode = 3
-                mImageDistribute*/
-                GlobalConfig.sMode = 1
-                mEraserDistribute
+                mImageBitmapDistribute
             } else {
                 if (size < Util.thickPointSize) {
                     if (size > Util.finePointSize) {
@@ -75,6 +75,10 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
 
     fun saveCall(lines: (MyLines) -> Unit) {
         mController.saveWhiteboard { lines(it) }
+    }
+
+    fun getLines(lines: (MyLines) -> Unit) {
+        mController.getLinesWhiteboard { lines(it) }
     }
 
     fun drawSavedJson(data: MyLines){

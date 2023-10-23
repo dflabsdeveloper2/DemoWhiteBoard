@@ -141,24 +141,26 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (isMoveModeEnabled) {
-            Log.d("YOUTUBE", "pointer-> ${event.pointerCount}")
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     lastX = event.x
                     lastY = event.y
                     selectedVideo = findSelectedVideo(event.x, event.y)
                     initialFingerSpacing = getFingerSpacing(event)
+
+                    if (selectedVideo == null) return super.onTouchEvent(event)
                 }
 
                 MotionEvent.ACTION_MOVE -> {
-                    if (event.pointerCount > 1) {
-                        // Calcula la nueva distancia entre los dedos para escalar
-                        val newSpacing = getFingerSpacing(event)
+                    selectedVideo?.let { video ->
+                        if (event.pointerCount > 1) {
+                            // Calcula la nueva distancia entre los dedos para escalar
+                            val newSpacing = getFingerSpacing(event)
 
-                        // Calcula el factor de escala basado en las distancias inicial y actual
-                        if (newSpacing > 0 && initialFingerSpacing > 0) {
-                            // Aplica el escalado al video dentro de los límites mínimo y máximo
-                            selectedVideo?.let { video ->
+                            // Calcula el factor de escala basado en las distancias inicial y actual
+                            if (newSpacing > 0 && initialFingerSpacing > 0) {
+                                // Aplica el escalado al video dentro de los límites mínimo y máximo
+
                                 val scaleFactor =
                                     (newSpacing / (initialFingerSpacing * 100)).coerceIn(1f, 3f)
 
@@ -166,12 +168,20 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                                 video.scaleY = scaleFactor
 
                                 // Calcula el desplazamiento en las coordenadas x y y después del escalado
-                                val deltaX = video.x + video.width * (scaleFactor - video.scaleX) / 2 - video.x
-                                val deltaY = video.y + video.height * (scaleFactor - video.scaleY) / 2 - video.y
+                                val deltaX =
+                                    video.x + video.width * (scaleFactor - video.scaleX) / 2 - video.x
+                                val deltaY =
+                                    video.y + video.height * (scaleFactor - video.scaleY) / 2 - video.y
 
                                 // Ajusta las coordenadas x y y para mantener el margen y evitar que se salgan de la pantalla
-                                val limitedX = (video.x - deltaX).coerceIn(marginThreshold.toFloat(), (width - video.width - marginThreshold).toFloat())
-                                val limitedY = (video.y - deltaY).coerceIn(marginThreshold.toFloat(), (height - video.height - marginThreshold).toFloat())
+                                val limitedX = (video.x - deltaX).coerceIn(
+                                    marginThreshold.toFloat(),
+                                    (width - video.width - marginThreshold).toFloat()
+                                )
+                                val limitedY = (video.y - deltaY).coerceIn(
+                                    marginThreshold.toFloat(),
+                                    (height - video.height - marginThreshold).toFloat()
+                                )
 
                                 // Aplica el escalado y ajusta las coordenadas
                                 video.x = limitedX
@@ -183,20 +193,22 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                                 layoutParams.leftMargin = video.x.toInt()
                                 layoutParams.topMargin = video.y.toInt()
                                 video.viewer.layoutParams = layoutParams
+                            } else {
+                                //NADA
                             }
-                        }
-                    } else {
-                        selectedVideo?.let { video ->
-                            val deltaX = event.x - lastX
-                            val deltaY = event.y - lastY
+                        } else {
+                            selectedVideo?.let { video ->
+                                val deltaX = event.x - lastX
+                                val deltaY = event.y - lastY
 
-                            val newX = video.x + deltaX
-                            val newY = video.y + deltaY
+                                val newX = video.x + deltaX
+                                val newY = video.y + deltaY
 
-                            moveYouTubePlayer(video, newX, newY)
+                                moveYouTubePlayer(video, newX, newY)
 
-                            lastX = event.x
-                            lastY = event.y
+                                lastX = event.x
+                                lastY = event.y
+                            }
                         }
                     }
                 }

@@ -71,6 +71,10 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         mHandler.obtainMessage(WriteCommand.UNDO).sendToTarget()
     }
 
+    fun moveBitmap(data:ImageBitmap2){
+        mHandler.obtainMessage(WriteCommand.MOVE_BITMAP, data).sendToTarget()
+    }
+
     fun addImageBitmap(data: ImageBitmap) {
         mHandler.obtainMessage(WriteCommand.DRAW_BITMAP, data).sendToTarget()
     }
@@ -266,6 +270,21 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 clear()
             }
 
+            WriteCommand.MOVE_BITMAP -> {
+                val obj = msg.obj as? ImageBitmap2 ?: return true
+                val data: ImageBitmap2 = obj
+                clearToRender()
+                val dstRect = RectF(
+                    data.x.toFloat(),
+                    data.y.toFloat(),
+                    data.x + data.width,
+                    data.y + data.height
+                )
+
+                // Dibuja el bitmap en el canvas en la posición y tamaño especificados
+                mStrokesCanvas?.drawBitmap(data.image, null, dstRect, null)
+            }
+
             WriteCommand.DRAW_BITMAP -> {
                 val obj = msg.obj as? ImageBitmap ?: return true
                 val data: ImageBitmap = obj
@@ -411,6 +430,19 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         resize(GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT)
         render()
     }
+
+    fun getLinesWhiteboard(lines: (MyLines) -> Unit) {
+        lines(
+            MyLines(
+                myLines,
+                GlobalConfig.backgroundWallpaper,
+                GlobalConfig.backgroundColor,
+                123,
+                GlobalConfig.currentPage
+            )
+        )
+    }
+
     companion object {
         private const val TAG = "chenw:;WriteBoardController"
     }

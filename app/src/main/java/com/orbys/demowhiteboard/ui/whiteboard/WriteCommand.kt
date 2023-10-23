@@ -17,4 +17,5 @@ object WriteCommand {
     const val REDO = 123456
     const val UNDO = 654321
     const val DRAW_BITMAP = 12013
+    const val MOVE_BITMAP = 894341321
 }
