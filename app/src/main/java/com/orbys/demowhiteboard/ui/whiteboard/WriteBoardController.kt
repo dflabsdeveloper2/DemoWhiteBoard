@@ -3,7 +3,7 @@ package com.orbys.demowhiteboard.ui.whiteboard
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Rect
+import android.graphics.RectF
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -16,11 +16,12 @@ import com.orbys.demowhiteboard.domain.drawline.LineData
 import com.orbys.demowhiteboard.domain.eraser.AccelerateEraserActor
 import com.orbys.demowhiteboard.domain.eraser.EraseData
 import com.orbys.demowhiteboard.domain.eraser.EraserActor
+import com.orbys.demowhiteboard.domain.model.ImageBitmap
+import com.orbys.demowhiteboard.domain.model.ImageBitmap2
 import com.orbys.demowhiteboard.domain.model.MyLine
 import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.domain.model.MyPaint
 import com.orbys.demowhiteboard.ui.core.Helper
-import com.orbys.demowhiteboard.ui.model.ImageBitmap
 import com.skg.drawaccelerate.AccelerateManager
 
 class WriteBoardController(private val context:Context, private val callBack: () -> Unit) : Handler.Callback {
@@ -70,7 +71,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         mHandler.obtainMessage(WriteCommand.UNDO).sendToTarget()
     }
 
-    fun addImageBitmap(data: List<ImageBitmap>) {
+    fun addImageBitmap(data: ImageBitmap) {
         mHandler.obtainMessage(WriteCommand.DRAW_BITMAP, data).sendToTarget()
     }
 
@@ -89,17 +90,35 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                     myLines.add(lastUndoneLine)
 
                     myLines.forEach {
-                        if (!it.props.ereaser) {
-                            val lineData = LineData(it.props.color, it.props.strokeWidth)
-                            it.line!!.forEach { point ->
-                                lineData.addPoint(point.x, point.y)
-                            }
-                            mStrokesCanvas?.drawPath(lineData.toPath(), it.props.toPaint())
-                        } else {
-                            it.lineEraser!!.forEach {rect->
-                                if (rect != null) {
-                                    mStrokesCanvas?.drawRect(rect, it.props.toPaint())
+                        if (it.props != null) {
+                            if (!it.props.ereaser) {
+                                val lineData = LineData(it.props.color, it.props.strokeWidth)
+                                it.line!!.forEach { point ->
+                                    lineData.addPoint(point.x, point.y)
                                 }
+                                mStrokesCanvas?.drawPath(lineData.toPath(), it.props.toPaint())
+                            } else {
+                                it.lineEraser!!.forEach { rect ->
+                                    if (rect != null) {
+                                        mStrokesCanvas?.drawRect(rect, it.props.toPaint())
+                                    }
+                                }
+                            }
+                        } else {
+                            if (it.imageBitmap != null) {
+                                val dstRect = RectF(
+                                    it.imageBitmap!!.x,
+                                    it.imageBitmap!!.y,
+                                    it.imageBitmap!!.x + it.imageBitmap!!.width,
+                                    it.imageBitmap!!.y + it.imageBitmap!!.height
+                                )
+
+                                mStrokesCanvas?.drawBitmap(
+                                    it.imageBitmap!!.image,
+                                    null,
+                                    dstRect,
+                                    null
+                                )
                             }
                         }
                     }
@@ -119,17 +138,36 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                     val listRedo = myLinesHistory.dropLast(1)
 
                     listRedo.forEach {
-                        if (!it.props.ereaser) {
-                            val lineData = LineData(it.props.color, it.props.strokeWidth)
-                            it.line!!.forEach { point ->
-                                lineData.addPoint(point.x, point.y)
-                            }
-                            mStrokesCanvas?.drawPath(lineData.toPath(), it.props.toPaint())
-                        } else {
-                            it.lineEraser!!.forEach {rect->
-                                if (rect != null) {
-                                    mStrokesCanvas?.drawRect(rect, it.props.toPaint())
+                        if (it.props != null) {
+                            if (!it.props.ereaser) {
+                                val lineData = LineData(it.props.color, it.props.strokeWidth)
+                                it.line!!.forEach { point ->
+                                    lineData.addPoint(point.x, point.y)
                                 }
+                                mStrokesCanvas?.drawPath(lineData.toPath(), it.props.toPaint())
+                            } else {
+                                it.lineEraser!!.forEach { rect ->
+                                    if (rect != null) {
+                                        mStrokesCanvas?.drawRect(rect, it.props.toPaint())
+                                    }
+                                }
+                            }
+                        } else {
+                            if (it.imageBitmap != null) {
+                                val dstRect = RectF(
+                                    it.imageBitmap!!.x,
+                                    it.imageBitmap!!.y,
+                                    it.imageBitmap!!.x + it.imageBitmap!!.width,
+                                    it.imageBitmap!!.y + it.imageBitmap!!.height
+                                )
+
+                                mStrokesCanvas?.drawBitmap(
+                                    it.imageBitmap!!.image,
+                                    null,
+                                    dstRect,
+                                    null
+                                )
+
                             }
                         }
                     }
@@ -188,17 +226,30 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 val offscreenCanvas = Canvas(offscreenBitmap)
 
                 lineDraw.forEach {
-                    if (!it.props.ereaser) {
-                        val lineData = LineData(it.props.color, it.props.strokeWidth)
-                        it.line!!.forEach { point ->
-                            lineData.addPoint(point.x, point.y)
-                        }
-                        offscreenCanvas.drawPath(lineData.toPath(), it.props.toPaint())
-                    } else {
-                        it.lineEraser!!.forEach {rect->
-                            if (rect != null) {
-                                offscreenCanvas.drawRect(rect, it.props.toPaint())
+                    if (it.props != null) {
+                        if (!it.props.ereaser) {
+                            val lineData = LineData(it.props.color, it.props.strokeWidth)
+                            it.line!!.forEach { point ->
+                                lineData.addPoint(point.x, point.y)
                             }
+                            offscreenCanvas.drawPath(lineData.toPath(), it.props.toPaint())
+                        } else {
+                            it.lineEraser!!.forEach { rect ->
+                                if (rect != null) {
+                                    offscreenCanvas.drawRect(rect, it.props.toPaint())
+                                }
+                            }
+                        }
+                    } else {
+                        if (it.imageBitmap != null) {
+                            val dstRect = RectF(
+                                it.imageBitmap!!.x,
+                                it.imageBitmap!!.y,
+                                it.imageBitmap!!.x + it.imageBitmap!!.width,
+                                it.imageBitmap!!.y + it.imageBitmap!!.height
+                            )
+
+                            offscreenCanvas.drawBitmap(it.imageBitmap!!.image, null, dstRect, null)
                         }
                     }
                 }
@@ -216,54 +267,50 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             }
 
             WriteCommand.DRAW_BITMAP -> {
-                val obj = msg.obj as? List<ImageBitmap> ?: return true
-                val data: List<ImageBitmap> = obj
+                val obj = msg.obj as? ImageBitmap ?: return true
+                val data: ImageBitmap = obj
 
-                if (data.isEmpty()) return true
+                Log.d("IMAGE", "NO EMPTY")
 
-                var x = 50 // Posición inicial X
-                var y = 50 // Posición Y fija para todos los bitmaps
-                val padding = 50
+                val x = 50 // Posición inicial X
+                val y = 50 // Posición Y fija para todos los bitmaps
 
-                data.forEach { imageBitmap ->
-                    val originalWidth = imageBitmap.image.width.toFloat()
-                    val originalHeight = imageBitmap.image.height.toFloat()
+                val originalWidth = data.image.width.toFloat()
+                val originalHeight = data.image.height.toFloat()
 
-                    val maxWidth = 1000f // Ancho máximo permitido
-                    val maxHeight = 1000f // Altura máxima permitida
+                val maxWidth = 1000f // Ancho máximo permitido
+                val maxHeight = 1000f // Altura máxima permitida
 
-                    // Calcula las proporciones para ajustar el ancho y el alto del bitmap
-                    val ratio = originalWidth / originalHeight
-                    var newWidth = if (originalWidth > maxWidth) maxWidth else originalWidth
-                    var newHeight = newWidth / ratio
+                // Calcula las proporciones para ajustar el ancho y el alto del bitmap
+                val ratio = originalWidth / originalHeight
+                var newWidth = if (originalWidth > maxWidth) maxWidth else originalWidth
+                var newHeight = newWidth / ratio
 
-                    // Verifica si la altura supera el límite permitido
-                    if (newHeight > maxHeight) {
-                        val scaleRatio = maxHeight / newHeight
-                        newHeight *= scaleRatio
-                        newWidth *= scaleRatio
-                    }
-
-                    //verificar fila
-                    if (x + newWidth > GlobalConfig.SCREEN_WIDTH) {
-                        y = (maxHeight + 50).toInt()
-                        x = 50
-                    }
-
-                    // Crea el rectángulo de destino con la posición X actual, posición Y y tamaño del bitmap ajustado
-                    val dstRect = Rect(
-                        x,
-                        y,
-                        (x + newWidth).toInt(),
-                        (y + newHeight).toInt()
-                    )
-
-                    // Dibuja el bitmap en el canvas en la posición y tamaño especificados
-                    mStrokesCanvas?.drawBitmap(imageBitmap.image, null, dstRect, null)
-
-                    // Actualiza la posición X para la próxima iteración
-                    x += (maxWidth + padding * 2).toInt()// Mueve la posición X al final del bitmap dibujado el 50 es el espaciado
+                // Verifica si la altura supera el límite permitido
+                if (newHeight > maxHeight) {
+                    val scaleRatio = maxHeight / newHeight
+                    newHeight *= scaleRatio
+                    newWidth *= scaleRatio
                 }
+
+                // Crea el rectángulo de destino con la posición X actual, posición Y y tamaño del bitmap ajustado
+                val dstRect = RectF(
+                    x.toFloat(),
+                    y.toFloat(),
+                    x + newWidth,
+                    y + newHeight
+                )
+
+
+                val myImage = ImageBitmap2(
+                    data.image, x.toFloat(), y.toFloat(),
+                    newWidth, newHeight
+                )
+
+                // Dibuja el bitmap en el canvas en la posición y tamaño especificados
+                mStrokesCanvas?.drawBitmap(data.image, null, dstRect, null)
+
+                myLines.add(MyLine(null, null, null, myImage))
 
                 render()
             }
@@ -271,14 +318,14 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             WriteCommand.DRAW_LINE_ACCELERATE -> {
                 val obj = msg.obj as? LineData ?: return true
                 val data: LineData = obj
-                myLines.add(MyLine(data.getPoints(), null, data.paint))
+                myLines.add(MyLine(data.getPoints(), null, data.paint, null))
                 mStrokesCanvas?.drawPath(data.toPath(), data.paint.toPaint())
             }
 
             WriteCommand.ERASER_ACCELERATE -> {
                 val obj = msg.obj as? EraseData ?: return true
                 val data: EraseData = obj
-                myLines.add(MyLine(null, data.regions, mEraserPaint))
+                myLines.add(MyLine(null, data.regions, mEraserPaint, null))
                 for (region in data.regions) {
                     if (region != null) {
                         mStrokesCanvas?.drawRect(region, mEraserPaint.toPaint())

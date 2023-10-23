@@ -27,6 +27,7 @@ import com.orbys.demowhiteboard.R
 import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.databinding.ActivityMainBinding
 import com.orbys.demowhiteboard.domain.BitmapWhiteboard
+import com.orbys.demowhiteboard.domain.model.ImageBitmap
 import com.orbys.demowhiteboard.domain.model.MyWhiteboard
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.core.Util
@@ -36,7 +37,6 @@ import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.orbys.demowhiteboard.ui.dialog.DialogQR
 import com.orbys.demowhiteboard.ui.fragment.GoogleImagesFragment
 import com.orbys.demowhiteboard.ui.fragment.YoutubeFragment
-import com.orbys.demowhiteboard.ui.model.ImageBitmap
 import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
@@ -59,6 +59,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var myBitmapsFromWhiteboard:MutableMap<Int,Bitmap>
     private lateinit var myYoutubeVideos:MutableList<YoutubeVideo>
+    private lateinit var listImages:MutableList<ImageBitmap>
+
     private var totalPages = 1
 
     companion object {
@@ -115,7 +117,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initValues() {
-        GlobalConfig.listImages = mutableListOf()
+        listImages = mutableListOf()
 
         myBitmapsFromWhiteboard = mutableMapOf()
         myYoutubeVideos = mutableListOf()
@@ -202,6 +204,7 @@ class MainActivity : AppCompatActivity() {
             it.setBackgroundColor(getColor(R.color.white))
             binding.fContainer.isVisible = false
             myWhiteboard = MyWhiteboard(mutableListOf())
+            listImages = mutableListOf()
 
             binding.tvCurrentPage.text = GlobalConfig.currentPage.toString()
             binding.tvTotalPage.text = totalPages.toString()
@@ -334,9 +337,6 @@ class MainActivity : AppCompatActivity() {
                     GlobalConfig.currentPage--
 
                     drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.currentPage })
-
-                    addImage(GlobalConfig.listImages?.filter { it.page == GlobalConfig.currentPage }
-                        .orEmpty())
                 }
 
                 binding.videoOverlayView.apply {
@@ -383,9 +383,6 @@ class MainActivity : AppCompatActivity() {
                     GlobalConfig.currentPage++
 
                     drawSavedJson(myWhiteboard.lines.first { it.page == GlobalConfig.currentPage })
-
-                    addImage(GlobalConfig.listImages?.filter { it.page == GlobalConfig.currentPage }
-                        .orEmpty())
                 }
 
                 binding.videoOverlayView.apply {
@@ -426,9 +423,7 @@ class MainActivity : AppCompatActivity() {
 
                     Log.d("RESULT", "result google images url $result")
 
-                    val listImagesSizeInCurrentPage =
-                        GlobalConfig.listImages?.filter { it.page == GlobalConfig.currentPage }?.size
-                            ?: 0
+                    val listImagesSizeInCurrentPage = listImages.filter { it.page == GlobalConfig.currentPage }.size
 
                     if (listImagesSizeInCurrentPage < GlobalConfig.numMaxImagesPage) {
                         lifecycleScope.launch(Dispatchers.IO) {
@@ -452,7 +447,7 @@ class MainActivity : AppCompatActivity() {
 
                             Log.d("RESULT", "bitmap: $bitmap")
 
-                            GlobalConfig.listImages?.add(
+                            listImages.add(
                                 ImageBitmap(
                                     bitmap,
                                     GlobalConfig.currentPage
@@ -460,11 +455,15 @@ class MainActivity : AppCompatActivity() {
                             )
 
                             withContext(Dispatchers.Main) {
-                                binding.whiteboard.addImage(GlobalConfig.listImages?.filter { it.page == GlobalConfig.currentPage }
-                                    .orEmpty())
+                                binding.whiteboard.addImage(
+                                    ImageBitmap(
+                                        bitmap,
+                                        GlobalConfig.currentPage
+                                    )
+                                )
                             }
 
-                            Log.d("RESULT", "list images: ${GlobalConfig.listImages?.size}")
+                            Log.d("RESULT", "list images: ${listImages.size}")
                         }
                     } else {
                         Toast.makeText(this, "Numero maximo de imagenes", Toast.LENGTH_SHORT).show()
@@ -565,6 +564,7 @@ class MainActivity : AppCompatActivity() {
                     myWhiteboard = MyWhiteboard(mutableListOf())
                     myBitmapsFromWhiteboard.clear()
                     myYoutubeVideos.clear()
+                    listImages = mutableListOf()
 
                     binding.llMenu.isVisible = false
 

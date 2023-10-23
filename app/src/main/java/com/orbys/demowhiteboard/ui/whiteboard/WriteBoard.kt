@@ -13,7 +13,7 @@ import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.ui.MainActivity
 import com.orbys.demowhiteboard.ui.core.Util
 import com.orbys.demowhiteboard.ui.interfaz.Distribute
-import com.orbys.demowhiteboard.ui.model.ImageBitmap
+import com.orbys.demowhiteboard.domain.model.ImageBitmap
 
 class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private val mController = WriteBoardController(context) { this.postInvalidate() }
@@ -89,7 +89,7 @@ class WriteBoard(context: Context, attrs: AttributeSet?) : View(context, attrs) 
         mController.undoAction()
     }
 
-    fun addImage(data:List<ImageBitmap>) {
+    fun addImage(data:ImageBitmap) {
         mController.addImageBitmap(data)
     }
 }

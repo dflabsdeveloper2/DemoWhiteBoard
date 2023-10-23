@@ -3,7 +3,7 @@ package com.orbys.demowhiteboard.core
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import com.orbys.demowhiteboard.ui.model.ImageBitmap
+import com.orbys.demowhiteboard.domain.model.ImageBitmap
 
 object GlobalConfig {
 
@@ -26,8 +26,6 @@ object GlobalConfig {
     var backgroundColor:Int? = defaultBackgroundColor
     var backgroundWallpaper: String? = null
     var currentPage = 1
-    var listImages:MutableList<ImageBitmap>? = null
-
 
     var backgroundBitmap: Bitmap = Bitmap.createBitmap(
         SCREEN_WIDTH, SCREEN_HEIGHT,

@@ -16,7 +16,7 @@ data class MyLines(
     /*var youtube:String*/
 )
 
-data class MyLine(var line: List<PointF>?,var lineEraser: List<RectF?>?, val props: MyPaint){
+data class MyLine(var line: List<PointF>?,var lineEraser: List<RectF?>?, val props: MyPaint?, var imageBitmap: ImageBitmap2?){
     fun toPath():Path?{
         if(line!=null) {
             val path = Path()
