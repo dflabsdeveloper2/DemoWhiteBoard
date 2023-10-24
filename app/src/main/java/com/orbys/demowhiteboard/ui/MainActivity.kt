@@ -147,21 +147,6 @@ class MainActivity : AppCompatActivity() {
             if (modeSelected) {
                 it.setBackgroundColor(getColor(R.color.red))
                 binding.videoOverlayView.setMovementMode()
-
-                binding.whiteboard.apply {
-                    getLines { myLine ->
-                        myWhiteboard?.let { whiteboard ->
-                            if (whiteboard.lines.none { it.page == myLine.page }) {
-                                whiteboard.lines.add(myLine)
-                            } else {
-                                whiteboard.lines.removeAll { it.page == myLine.page }
-                                whiteboard.lines.add(myLine)
-                            }
-                        }
-                    }
-
-                    GlobalConfig.listMyWhiteBoard = myWhiteboard
-                }
             }else{
                 binding.videoOverlayView.setDrawingMode()
                 it.setBackgroundColor(getColor(R.color.white))
@@ -465,12 +450,27 @@ class MainActivity : AppCompatActivity() {
                             )
 
                             withContext(Dispatchers.Main) {
-                                binding.whiteboard.addImage(
-                                    ImageBitmap(
-                                        bitmap,
-                                        GlobalConfig.currentPage
+                                binding.whiteboard.apply {
+                                    addImage(
+                                        ImageBitmap(
+                                            bitmap,
+                                            GlobalConfig.currentPage
+                                        )
                                     )
-                                )
+
+                                    getLines { myLine ->
+                                        myWhiteboard?.let { whiteboard ->
+                                            if (whiteboard.lines.none { it.page == myLine.page }) {
+                                                whiteboard.lines.add(myLine)
+                                            } else {
+                                                whiteboard.lines.removeAll { it.page == myLine.page }
+                                                whiteboard.lines.add(myLine)
+                                            }
+                                        }
+                                    }
+
+                                    GlobalConfig.listMyWhiteBoard = myWhiteboard
+                                }
                             }
 
                             Log.d("RESULT", "list images: ${listImages.size}")

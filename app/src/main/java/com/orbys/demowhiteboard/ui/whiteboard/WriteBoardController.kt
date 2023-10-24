@@ -32,6 +32,9 @@ class WriteBoardController(private val context:Context, private val callBack: ()
     private val mHandlerThread: HandlerThread = HandlerThread("temp-r")
     private val mHandler: Handler
 
+    // Imagen seleccionada para mover
+    private var selectedImage: ImageBitmap2? = null
+
     //private val mEraserIndicatorPaint = Paint()
     private val mEraserPaint = MyPaint(ereaser = true)
     private var myLines: MutableList<MyLine>
@@ -71,7 +74,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         mHandler.obtainMessage(WriteCommand.UNDO).sendToTarget()
     }
 
-    fun moveBitmap(data:ImageBitmap2){
+    fun moveBitmap(data: Pair<ImageBitmap2, String>) {
         mHandler.obtainMessage(WriteCommand.MOVE_BITMAP, data).sendToTarget()
     }
 
@@ -270,19 +273,32 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             }
 
             WriteCommand.MOVE_BITMAP -> {
-                val obj = msg.obj as? ImageBitmap2 ?: return true
-                val data: ImageBitmap2 = obj
-                clearToRender()
+                val obj = msg.obj as? Pair<ImageBitmap2, String> ?: return true
+                selectedImage = obj.first
 
-                val dstRect = RectF(
-                    data.x,
-                    data.y,
-                    data.x + data.width,
-                    data.y + data.height
-                )
+                selectedImage?.let { image ->
+                    // Crear una copia del búfer de dibujo original sin el bitmap seleccionado
+                    val tempBufferBitmap = mBufferBitmap?.copy(Bitmap.Config.ARGB_8888, true)
+                    val tempBufferCanvas = Canvas(tempBufferBitmap!!)
 
-                // Dibuja el bitmap en el canvas en la posición y tamaño especificados
-                mBufferCanvas?.drawBitmap(data.image, null, dstRect, null)
+                    // Dibujar el bitmap seleccionado en su nueva posición en la copia del búfer de dibujo
+                    val dstRect =
+                        RectF(image.x, image.y, image.x + image.width, image.y + image.height)
+                    tempBufferCanvas.drawBitmap(image.image, null, dstRect, null)
+
+                    // Asignar la copia del búfer de dibujo al búfer de dibujo actual
+                    mBufferBitmap?.recycle()
+                    mBufferBitmap = tempBufferBitmap
+
+                    // Renderizar el canvas
+                    render()
+
+                    if (obj.second == "finish") {
+                        myLines.removeIf { it.imageBitmap?.image == selectedImage?.image }
+                        myLines.add(MyLine(null, null, null, selectedImage))
+                        selectedImage = null
+                    }
+                }
             }
 
             WriteCommand.DRAW_BITMAP -> {

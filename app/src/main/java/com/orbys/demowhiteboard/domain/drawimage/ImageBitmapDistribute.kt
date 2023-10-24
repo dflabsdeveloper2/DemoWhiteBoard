@@ -43,7 +43,7 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
                         selected!!.x = temp.x
                         selected!!.y = temp.y
 
-                        mWriteBoardController.moveBitmap(selected!!)
+                        mWriteBoardController.moveBitmap(Pair(selected!!,"move"))
                     } else {
                         Log.d("IMAGE", "Fuera de pantalla")
                         return // Evita que la imagen se actualice si está fuera de la pantalla
@@ -53,6 +53,7 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
 
             MotionEvent.ACTION_UP -> {
                 if (selected != null) {
+                    mWriteBoardController.moveBitmap(Pair(selected!!,"finish"))
 
                     val list = GlobalConfig.listMyWhiteBoard
 
@@ -96,7 +97,7 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
         }
     }
 
-    fun hasBitmapAt(x: Float, y: Float): ImageBitmap2? {
+    private fun hasBitmapAt(x: Float, y: Float): ImageBitmap2? {
 
         val listBitmap = GlobalConfig.listMyWhiteBoard?.getAllImageBitmap()
         Log.d("IMAGE", "listBitmap size: ${listBitmap?.size}")
@@ -132,7 +133,7 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
         return null
     }
 
-    fun isImageBitmapWithinScreen(
+    private fun isImageBitmapWithinScreen(
         imageBitmap: ImageBitmap2,
         screenWidth: Int,
         screenHeight: Int
