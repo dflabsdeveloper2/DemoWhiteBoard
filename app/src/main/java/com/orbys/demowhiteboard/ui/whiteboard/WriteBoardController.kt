@@ -275,29 +275,12 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             WriteCommand.MOVE_BITMAP -> {
                 val obj = msg.obj as? Pair<ImageBitmap2, String> ?: return true
                 selectedImage = obj.first
-
                 selectedImage?.let { image ->
-                    // Crear una copia del búfer de dibujo original sin el bitmap seleccionado
-                    val tempBufferBitmap = mBufferBitmap?.copy(Bitmap.Config.ARGB_8888, true)
-                    val tempBufferCanvas = Canvas(tempBufferBitmap!!)
-
-                    // Dibujar el bitmap seleccionado en su nueva posición en la copia del búfer de dibujo
-                    val dstRect =
-                        RectF(image.x, image.y, image.x + image.width, image.y + image.height)
-                    tempBufferCanvas.drawBitmap(image.image, null, dstRect, null)
-
-                    // Asignar la copia del búfer de dibujo al búfer de dibujo actual
-                    mBufferBitmap?.recycle()
-                    mBufferBitmap = tempBufferBitmap
-
-                    // Renderizar el canvas
-                    render()
-
-                    if (obj.second == "finish") {
-                        myLines.removeIf { it.imageBitmap?.image == selectedImage?.image }
-                        myLines.add(MyLine(null, null, null, selectedImage))
+                    if(obj.second == "finish"){
                         selectedImage = null
                     }
+
+                    render()
                 }
             }
 
@@ -382,6 +365,37 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         mDisplayBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
         // También puedes agregar aquí otras operaciones de dibujo específicas en el lienzo.
         // Por ejemplo, dibujar elementos adicionales sobre el lienzo principal.
+
+
+        //TODO: revisar si se puede pintar encima de la imagen
+        selectedImage?.let {
+            myLines.forEach { line ->
+                if (line.props != null) {
+                    if (!line.props.ereaser) {
+                        val lineData = LineData(line.props.color, line.props.strokeWidth)
+                        line.line!!.forEach { point ->
+                            lineData.addPoint(point.x, point.y)
+                        }
+                        canvas.drawPath(lineData.toPath(), line.props.toPaint())
+                    } else {
+                        line.lineEraser!!.forEach { rect ->
+                            if (rect != null) {
+                                canvas.drawRect(rect, line.props.toPaint())
+                            }
+                        }
+                    }
+                }
+            }
+
+            val dstRect = RectF(
+                selectedImage!!.x,
+                selectedImage!!.y,
+                selectedImage!!.x + selectedImage!!.width,
+                selectedImage!!.y + selectedImage!!.height
+            )
+
+            canvas.drawBitmap(selectedImage!!.image, null, dstRect, null)
+        }
     }
 
     private fun render() {

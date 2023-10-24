@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.orbys.demowhiteboard.core.GlobalConfig
+import com.orbys.demowhiteboard.ui.core.DrawFunctions
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
@@ -126,14 +127,7 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
         return isMoveModeEnabled
     }
 
-    private fun getFingerSpacing(event: MotionEvent): Float {
-        if (event.pointerCount >= 2) {
-            val x = event.getX(0) - event.getX(1)
-            val y = event.getY(0) - event.getY(1)
-            return kotlin.math.sqrt((x * x + y * y).toDouble()).toFloat()
-        }
-        return 1f
-    }
+
 
     private var initialFingerSpacing = 1f
     private var initialScaleX = 1f
@@ -146,7 +140,7 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                     lastX = event.x
                     lastY = event.y
                     selectedVideo = findSelectedVideo(event.x, event.y)
-                    initialFingerSpacing = getFingerSpacing(event)
+                    initialFingerSpacing = DrawFunctions.getFingerSpacing(event)
 
                     if (selectedVideo == null) return super.onTouchEvent(event)
                 }
@@ -154,47 +148,27 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                 MotionEvent.ACTION_MOVE -> {
                     selectedVideo?.let { video ->
                         if (event.pointerCount > 1) {
-                            // Calcula la nueva distancia entre los dedos para escalar
-                            val newSpacing = getFingerSpacing(event)
-
-                            // Calcula el factor de escala basado en las distancias inicial y actual
-                            if (newSpacing > 0 && initialFingerSpacing > 0) {
-                                // Aplica el escalado al video dentro de los límites mínimo y máximo
-
-                                val scaleFactor =
-                                    (newSpacing / (initialFingerSpacing * 100)).coerceIn(1f, 3f)
-
-                                video.scaleX = scaleFactor
-                                video.scaleY = scaleFactor
-
-                                // Calcula el desplazamiento en las coordenadas x y y después del escalado
-                                val deltaX =
-                                    video.x + video.width * (scaleFactor - video.scaleX) / 2 - video.x
-                                val deltaY =
-                                    video.y + video.height * (scaleFactor - video.scaleY) / 2 - video.y
-
-                                // Ajusta las coordenadas x y y para mantener el margen y evitar que se salgan de la pantalla
-                                val limitedX = (video.x - deltaX).coerceIn(
-                                    marginThreshold.toFloat(),
-                                    (width - video.width - marginThreshold).toFloat()
-                                )
-                                val limitedY = (video.y - deltaY).coerceIn(
-                                    marginThreshold.toFloat(),
-                                    (height - video.height - marginThreshold).toFloat()
-                                )
-
-                                // Aplica el escalado y ajusta las coordenadas
-                                video.x = limitedX
-                                video.y = limitedY
+                            val newScale = DrawFunctions.scaleImage(
+                                video.x,
+                                video.y,
+                                video.width.toFloat(),
+                                video.height.toFloat(),
+                                event,
+                                initialFingerSpacing
+                            )
+                            newScale?.let {
+                                video.x = it.x
+                                video.y = it.y
+                                video.width = it.width.toInt()
+                                video.height = it.height.toInt()
 
                                 val layoutParams = video.viewer.layoutParams as LayoutParams
-                                layoutParams.width = (video.width * video.scaleX).toInt()
-                                layoutParams.height = (video.height * video.scaleY).toInt()
+                                layoutParams.width = video.width
+                                layoutParams.height = video.height
                                 layoutParams.leftMargin = video.x.toInt()
                                 layoutParams.topMargin = video.y.toInt()
                                 video.viewer.layoutParams = layoutParams
-                            } else {
-                                //NADA
+
                             }
                         } else {
                             selectedVideo?.let { video ->

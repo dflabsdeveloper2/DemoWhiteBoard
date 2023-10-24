@@ -5,12 +5,14 @@ import android.util.Log
 import android.view.MotionEvent
 import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.domain.model.ImageBitmap2
+import com.orbys.demowhiteboard.ui.core.DrawFunctions
 import com.orbys.demowhiteboard.ui.interfaz.Distribute
 import com.orbys.demowhiteboard.ui.whiteboard.WriteBoardController
 
 class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
     private val mWriteBoardController: WriteBoardController
     private var selected: ImageBitmap2? = null
+    private var initialFingerSpacing = 1f
 
     init {
         mWriteBoardController = mController
@@ -23,38 +25,56 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
                 val y = event.y
 
                 selected = hasBitmapAt(x, y)
+                initialFingerSpacing = DrawFunctions.getFingerSpacing(event)
 
                 Log.d("IMAGE", "Image selected down-> ${selected?.x}  ${selected?.y}")
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (selected != null) {
-                    val temp = ImageBitmap2(
-                        selected!!.image,
-                        (event.x - selected!!.width / 2),  // Calcula la nueva coordenada X del centro del bitmap
-                        (event.y - selected!!.height / 2), // Calcula la nueva coordenada Y del centro del bitmap
-                        selected!!.width,
-                        selected!!.height,
-                        selected!!.rotation
-                    )
+                selected?.let { imageSelected->
+                    if (event.pointerCount > 1) {
+                        // Calcula la nueva distancia entre los dedos para escalar
+                        val newScale = DrawFunctions.scaleImage(imageSelected.x,imageSelected.y,imageSelected.width,imageSelected.height,event,initialFingerSpacing)
 
-                    // Comprueba si las nuevas coordenadas están dentro de los límites de la pantalla
-                    if (isImageBitmapWithinScreen(temp, GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT)) {
-                        selected!!.x = temp.x
-                        selected!!.y = temp.y
-
-                        mWriteBoardController.moveBitmap(Pair(selected!!,"move"))
+                        newScale?.let {
+                            imageSelected.x = it.x
+                            imageSelected.y = it.y
+                            imageSelected.width = it.width
+                            imageSelected.height = it.height
+                            mWriteBoardController.moveBitmap(Pair(imageSelected, "scale"))
+                        }
                     } else {
-                        Log.d("IMAGE", "Fuera de pantalla")
-                        return // Evita que la imagen se actualice si está fuera de la pantalla
+                        val temp = ImageBitmap2(
+                            imageSelected.image,
+                            (event.x - imageSelected.width / 2),  // Calcula la nueva coordenada X del centro del bitmap
+                            (event.y - imageSelected.height / 2), // Calcula la nueva coordenada Y del centro del bitmap
+                            imageSelected.width,
+                            imageSelected.height,
+                            imageSelected.rotation
+                        )
+
+                        // Comprueba si las nuevas coordenadas están dentro de los límites de la pantalla
+                        if (isImageBitmapWithinScreen(
+                                temp,
+                                GlobalConfig.SCREEN_WIDTH,
+                                GlobalConfig.SCREEN_HEIGHT
+                            )
+                        ) {
+                            imageSelected.x = temp.x
+                            imageSelected.y = temp.y
+
+                            mWriteBoardController.moveBitmap(Pair(imageSelected, "move"))
+                        } else {
+                            Log.d("IMAGE", "Fuera de pantalla")
+                            return // Evita que la imagen se actualice si está fuera de la pantalla
+                        }
                     }
                 }
             }
 
             MotionEvent.ACTION_UP -> {
+                initialFingerSpacing = 1f
                 if (selected != null) {
-                    mWriteBoardController.moveBitmap(Pair(selected!!,"finish"))
-
                     val list = GlobalConfig.listMyWhiteBoard
 
                     if (list != null) {
@@ -70,7 +90,6 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
                                 myLine.imageBitmap == imageBitmapAReemplazar
                             }
                         }
-
                         if (index != -1) {
                             // Encuentra el índice de la MyLine dentro de la lista de MyLines
                             val myLinesIndex = list.lines[index].listLines.indexOfFirst { myLine ->
