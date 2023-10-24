@@ -32,7 +32,9 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
 
             MotionEvent.ACTION_MOVE -> {
                 selected?.let { imageSelected->
-                    if (event.pointerCount > 1) {
+                    Log.d("TRANSFORM","count -> ${event.pointerCount}")
+                    if (event.pointerCount  == 2) {
+                        Log.d("TRANSFORM","SCALE FIRST")
                         // Calcula la nueva distancia entre los dedos para escalar
                         val newScale = DrawFunctions.scaleImage(imageSelected.x,imageSelected.y,imageSelected.width,imageSelected.height,event,initialFingerSpacing)
 
@@ -41,6 +43,8 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
                             imageSelected.y = it.y
                             imageSelected.width = it.width
                             imageSelected.height = it.height
+
+                            Log.d("TRANSFORM","SCALE")
                             mWriteBoardController.moveBitmap(Pair(imageSelected, "scale"))
                         }
                     } else {
@@ -63,6 +67,7 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
                             imageSelected.x = temp.x
                             imageSelected.y = temp.y
 
+                            Log.d("TRANSFORM","MOVE")
                             mWriteBoardController.moveBitmap(Pair(imageSelected, "move"))
                         } else {
                             Log.d("IMAGE", "Fuera de pantalla")
@@ -75,14 +80,12 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
             MotionEvent.ACTION_UP -> {
                 initialFingerSpacing = 1f
                 if (selected != null) {
+                    mWriteBoardController.moveBitmap(Pair(selected!!, "finish"))
+
                     val list = GlobalConfig.listMyWhiteBoard
 
                     if (list != null) {
                         val imageBitmapAReemplazar: ImageBitmap2 = selected!!
-                        Log.d(
-                            "IMAGE",
-                            "Image selected a remplazar-> ${selected?.x}  ${selected?.y}"
-                        )
 
                         // Encuentra el índice del ImageBitmap2 que quieres reemplazar
                         val index = list.lines.indexOfFirst { myLines ->

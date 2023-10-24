@@ -154,7 +154,8 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                                 video.width.toFloat(),
                                 video.height.toFloat(),
                                 event,
-                                initialFingerSpacing
+                                initialFingerSpacing,
+                                300f
                             )
                             newScale?.let {
                                 video.x = it.x

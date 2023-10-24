@@ -368,7 +368,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
 
         //TODO: revisar si se puede pintar encima de la imagen
-        selectedImage?.let {
+        selectedImage?.let { imageSelected->
             myLines.forEach { line ->
                 if (line.props != null) {
                     if (!line.props.ereaser) {
@@ -384,17 +384,28 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                             }
                         }
                     }
+                }else{
+                    if (line.imageBitmap != null) {
+                        val dstRect = if(line.imageBitmap!!.image == imageSelected.image){
+                            RectF(
+                                imageSelected.x,
+                                imageSelected.y,
+                                imageSelected.x + imageSelected.width,
+                                imageSelected.y + imageSelected.height
+                            )
+                        }else{
+                             RectF(
+                                line.imageBitmap!!.x,
+                                line.imageBitmap!!.y,
+                                line.imageBitmap!!.x + line.imageBitmap!!.width,
+                                line.imageBitmap!!.y + line.imageBitmap!!.height
+                            )
+                        }
+
+                        canvas.drawBitmap(line.imageBitmap!!.image, null, dstRect, null)
+                    }
                 }
             }
-
-            val dstRect = RectF(
-                selectedImage!!.x,
-                selectedImage!!.y,
-                selectedImage!!.x + selectedImage!!.width,
-                selectedImage!!.y + selectedImage!!.height
-            )
-
-            canvas.drawBitmap(selectedImage!!.image, null, dstRect, null)
         }
     }
 
