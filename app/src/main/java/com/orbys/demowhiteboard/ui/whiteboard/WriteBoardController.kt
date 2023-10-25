@@ -21,6 +21,7 @@ import com.orbys.demowhiteboard.domain.model.ImageBitmap2
 import com.orbys.demowhiteboard.domain.model.MyLine
 import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.domain.model.MyPaint
+import com.orbys.demowhiteboard.ui.core.DrawFunctions
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.skg.drawaccelerate.AccelerateManager
 
@@ -115,17 +116,12 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                             }
                         } else {
                             if (line.imageBitmap != null) {
-                                val dstRect = RectF(
-                                    line.imageBitmap!!.x,
-                                    line.imageBitmap!!.y,
-                                    line.imageBitmap!!.x + line.imageBitmap!!.width,
-                                    line.imageBitmap!!.y + line.imageBitmap!!.height
-                                )
+                                val result = DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
 
                                 mBufferCanvas?.drawBitmap(
-                                    line.imageBitmap!!.image,
+                                    result.bitmap,
                                     null,
-                                    dstRect,
+                                    result.rectF,
                                     null
                                 )
                             }
@@ -163,17 +159,12 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                             }
                         } else {
                             if (line.imageBitmap != null) {
-                                val dstRect = RectF(
-                                    line.imageBitmap!!.x,
-                                    line.imageBitmap!!.y,
-                                    line.imageBitmap!!.x + line.imageBitmap!!.width,
-                                    line.imageBitmap!!.y + line.imageBitmap!!.height
-                                )
+                                val result = DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
 
                                 mBufferCanvas?.drawBitmap(
-                                    line.imageBitmap!!.image,
+                                    result.bitmap,
                                     null,
-                                    dstRect,
+                                    result.rectF,
                                     null
                                 )
                             }
@@ -248,14 +239,9 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                         }
                     } else {
                         if (it.imageBitmap != null) {
-                            val dstRect = RectF(
-                                it.imageBitmap!!.x,
-                                it.imageBitmap!!.y,
-                                it.imageBitmap!!.x + it.imageBitmap!!.width,
-                                it.imageBitmap!!.y + it.imageBitmap!!.height
-                            )
+                            val result = DrawFunctions.scaleRotateTranslateBitmap(it.imageBitmap!!)
 
-                            offscreenCanvas.drawBitmap(it.imageBitmap!!.image, null, dstRect, null)
+                            offscreenCanvas.drawBitmap(result.bitmap, null, result.rectF, null)
                         }
                     }
                 }
@@ -276,11 +262,11 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 val obj = msg.obj as? Pair<ImageBitmap2, String> ?: return true
                 selectedImage = obj.first
                 selectedImage?.let { image ->
-                    if(obj.second == "finish"){
+                    if (obj.second != "finish") {
+                        render()
+                    } else {
                         selectedImage = null
                     }
-
-                    render()
                 }
             }
 
@@ -370,41 +356,31 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         //TODO: revisar si se puede pintar encima de la imagen
         selectedImage?.let { imageSelected->
             myLines.forEach { line ->
-                if (line.props != null) {
-                    if (!line.props.ereaser) {
-                        val lineData = LineData(line.props.color, line.props.strokeWidth)
-                        line.line!!.forEach { point ->
-                            lineData.addPoint(point.x, point.y)
-                        }
-                        canvas.drawPath(lineData.toPath(), line.props.toPaint())
-                    } else {
-                        line.lineEraser!!.forEach { rect ->
-                            if (rect != null) {
-                                canvas.drawRect(rect, line.props.toPaint())
-                            }
-                        }
-                    }
-                }else{
+                /*  if (line.props != null) {
+                      if (!line.props.ereaser) {
+                          val lineData = LineData(line.props.color, line.props.strokeWidth)
+                          line.line!!.forEach { point ->
+                              lineData.addPoint(point.x, point.y)
+                          }
+                          canvas.drawPath(lineData.toPath(), line.props.toPaint())
+                      } else {
+                          line.lineEraser!!.forEach { rect ->
+                              if (rect != null) {
+                                  canvas.drawRect(rect, line.props.toPaint())
+                              }
+                          }
+                      }
+                  }else{*/
                     if (line.imageBitmap != null) {
-                        val dstRect = if(line.imageBitmap!!.image == imageSelected.image){
-                            RectF(
-                                imageSelected.x,
-                                imageSelected.y,
-                                imageSelected.x + imageSelected.width,
-                                imageSelected.y + imageSelected.height
-                            )
-                        }else{
-                             RectF(
-                                line.imageBitmap!!.x,
-                                line.imageBitmap!!.y,
-                                line.imageBitmap!!.x + line.imageBitmap!!.width,
-                                line.imageBitmap!!.y + line.imageBitmap!!.height
-                            )
+                        if (line.imageBitmap!!.image == imageSelected.image) {
+                            val result = DrawFunctions.scaleRotateTranslateBitmap(imageSelected)
+                            canvas.drawBitmap(result.bitmap, null, result.rectF, null)
+                        } else {
+                            val result = DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
+                            canvas.drawBitmap(result.bitmap, null, result.rectF, null)
                         }
-
-                        canvas.drawBitmap(line.imageBitmap!!.image, null, dstRect, null)
                     }
-                }
+                //}
             }
         }
     }

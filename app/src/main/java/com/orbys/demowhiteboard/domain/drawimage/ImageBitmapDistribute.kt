@@ -5,6 +5,8 @@ import android.util.Log
 import android.view.MotionEvent
 import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.domain.model.ImageBitmap2
+import com.orbys.demowhiteboard.domain.model.MyLine
+import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.ui.core.DrawFunctions
 import com.orbys.demowhiteboard.ui.interfaz.Distribute
 import com.orbys.demowhiteboard.ui.whiteboard.WriteBoardController
@@ -13,6 +15,8 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
     private val mWriteBoardController: WriteBoardController
     private var selected: ImageBitmap2? = null
     private var initialFingerSpacing = 1f
+    private var initialAngle: Float = 0f
+
 
     init {
         mWriteBoardController = mController
@@ -26,52 +30,98 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
 
                 selected = hasBitmapAt(x, y)
                 initialFingerSpacing = DrawFunctions.getFingerSpacing(event)
+                initialAngle = DrawFunctions.calculateRotation(event)
 
                 Log.d("IMAGE", "Image selected down-> ${selected?.x}  ${selected?.y}")
             }
 
             MotionEvent.ACTION_MOVE -> {
                 selected?.let { imageSelected->
-                    Log.d("TRANSFORM","count -> ${event.pointerCount}")
-                    if (event.pointerCount  == 2) {
-                        Log.d("TRANSFORM","SCALE FIRST")
-                        // Calcula la nueva distancia entre los dedos para escalar
-                        val newScale = DrawFunctions.scaleImage(imageSelected.x,imageSelected.y,imageSelected.width,imageSelected.height,event,initialFingerSpacing)
-
-                        newScale?.let {
-                            imageSelected.x = it.x
-                            imageSelected.y = it.y
-                            imageSelected.width = it.width
-                            imageSelected.height = it.height
-
-                            Log.d("TRANSFORM","SCALE")
-                            mWriteBoardController.moveBitmap(Pair(imageSelected, "scale"))
-                        }
-                    } else {
-                        val temp = ImageBitmap2(
-                            imageSelected.image,
-                            (event.x - imageSelected.width / 2),  // Calcula la nueva coordenada X del centro del bitmap
-                            (event.y - imageSelected.height / 2), // Calcula la nueva coordenada Y del centro del bitmap
-                            imageSelected.width,
-                            imageSelected.height,
-                            imageSelected.rotation
-                        )
-
-                        // Comprueba si las nuevas coordenadas están dentro de los límites de la pantalla
-                        if (isImageBitmapWithinScreen(
-                                temp,
-                                GlobalConfig.SCREEN_WIDTH,
-                                GlobalConfig.SCREEN_HEIGHT
+                    Log.d("TRANSFORM", "count -> ${event.pointerCount}")
+                    when (event.pointerCount) {
+                        2 -> {
+                            Log.d("TRANSFORM", "SCALE FIRST")
+                            // Calcula la nueva distancia entre los dedos para escalar
+                            val newScale = DrawFunctions.scaleImage(
+                                imageSelected.x,
+                                imageSelected.y,
+                                imageSelected.width,
+                                imageSelected.height,
+                                event,
+                                initialFingerSpacing
                             )
-                        ) {
-                            imageSelected.x = temp.x
-                            imageSelected.y = temp.y
 
-                            Log.d("TRANSFORM","MOVE")
-                            mWriteBoardController.moveBitmap(Pair(imageSelected, "move"))
-                        } else {
-                            Log.d("IMAGE", "Fuera de pantalla")
-                            return // Evita que la imagen se actualice si está fuera de la pantalla
+                            newScale?.let {
+                                imageSelected.x = it.x
+                                imageSelected.y = it.y
+                                imageSelected.width = it.width
+                                imageSelected.height = it.height
+
+                                Log.d("TRANSFORM", "SCALE")
+                                mWriteBoardController.moveBitmap(Pair(imageSelected, "scale"))
+                            }
+                        }
+
+                        3 -> {
+                            val currentAngle = DrawFunctions.calculateRotation(event)
+                            Log.d("TRANSFORM", "angle-> $currentAngle")
+                            // Calcula la diferencia de ángulo entre el ángulo actual y el inicial
+                            val angleDelta = currentAngle - initialAngle
+                            Log.d("TRANSFORM", "angle bo-> $angleDelta")
+
+                            // Determina la dirección del giro (izquierda o derecha) y aplica la rotación
+                            if (angleDelta > 0) {
+                                // Gira hacia la derecha
+                                // Aplica la rotación a tu vista o imagen en dirección a la derecha
+                                // ... (aplica la rotación a tu vista o imagen aquí)
+
+                                imageSelected.rotation += angleDelta
+
+                            } else {
+                                // Gira hacia la izquierda
+                                // Aplica la rotación a tu vista o imagen en dirección a la izquierda
+                                // ... (aplica la rotación a tu vista o imagen aquí)
+                                imageSelected.rotation -= angleDelta
+                            }
+
+                            Log.d(
+                                "TRANSFORM",
+                                "rotation-> ${DrawFunctions.normalizeAngle(imageSelected.rotation.toInt())}"
+                            )
+                            imageSelected.rotation =
+                                DrawFunctions.normalizeAngle(imageSelected.rotation.toInt())
+                                    .toFloat()
+                            mWriteBoardController.moveBitmap(Pair(imageSelected, "rotate"))
+
+                            initialAngle = currentAngle
+                        }
+
+                        else -> {
+                            val temp = ImageBitmap2(
+                                imageSelected.image,
+                                (event.x - imageSelected.width / 2),  // Calcula la nueva coordenada X del centro del bitmap
+                                (event.y - imageSelected.height / 2), // Calcula la nueva coordenada Y del centro del bitmap
+                                imageSelected.width,
+                                imageSelected.height,
+                                imageSelected.rotation
+                            )
+
+                            // Comprueba si las nuevas coordenadas están dentro de los límites de la pantalla
+                            if (isImageBitmapWithinScreen(
+                                    temp,
+                                    GlobalConfig.SCREEN_WIDTH,
+                                    GlobalConfig.SCREEN_HEIGHT
+                                )
+                            ) {
+                                imageSelected.x = temp.x
+                                imageSelected.y = temp.y
+
+                                Log.d("TRANSFORM", "MOVE")
+                                mWriteBoardController.moveBitmap(Pair(imageSelected, "move"))
+                            } else {
+                                Log.d("IMAGE", "Fuera de pantalla")
+                                return // Evita que la imagen se actualice si está fuera de la pantalla
+                            }
                         }
                     }
                 }
@@ -126,8 +176,8 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
         if (listBitmap.isNullOrEmpty()) return null
 
         for (imageBitmap in listBitmap) {
-            Log.d("IMAGE", "Image selected ${imageBitmap.image}-> ${selected?.x}  ${selected?.y}")
-            val matrix = Matrix()
+            Log.d("IMAGE", "Image selected ${imageBitmap.image}-> ${imageBitmap?.x}  ${imageBitmap?.y}")
+         /*   val matrix = Matrix()
             // Aplicar la rotación inversa a las coordenadas del punto
             matrix.postRotate(
                 -imageBitmap.rotation,
@@ -137,8 +187,8 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
             val inverseMatrix = Matrix()
             matrix.invert(inverseMatrix)
             val transformedPoint = floatArrayOf(x, y)
-            inverseMatrix.mapPoints(transformedPoint)
-
+            inverseMatrix.mapPoints(transformedPoint)*/
+            val transformedPoint = floatArrayOf(x, y)
             val left = imageBitmap.x
             val top = imageBitmap.y
             val right = left + imageBitmap.width

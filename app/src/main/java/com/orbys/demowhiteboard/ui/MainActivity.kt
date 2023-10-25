@@ -144,12 +144,28 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnSelect.setOnClickListener {
             modeSelected = !modeSelected
+
             if (modeSelected) {
                 it.setBackgroundColor(getColor(R.color.red))
                 binding.videoOverlayView.setMovementMode()
             }else{
                 binding.videoOverlayView.setDrawingMode()
                 it.setBackgroundColor(getColor(R.color.white))
+            }
+
+            binding.whiteboard.apply {
+                getLines { myLine ->
+                    myWhiteboard?.let { whiteboard ->
+                        if (whiteboard.lines.none { it.page == myLine.page }) {
+                            whiteboard.lines.add(myLine)
+                        } else {
+                            whiteboard.lines.removeAll { it.page == myLine.page }
+                            whiteboard.lines.add(myLine)
+                        }
+                    }
+                }
+
+                GlobalConfig.listMyWhiteBoard = myWhiteboard
             }
         }
 
