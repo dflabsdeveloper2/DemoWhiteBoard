@@ -11,7 +11,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.orbys.demowhiteboard.core.GlobalConfig
-import com.orbys.demowhiteboard.ui.core.DrawFunctions
+import com.orbys.demowhiteboard.domain.DrawFunctions
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView

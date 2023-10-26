@@ -6,7 +6,7 @@ import android.graphics.RectF
 
 
 data class MyWhiteboard(var lines: MutableList<MyLines>) {
-    fun getAllImageBitmap(): List<ImageBitmap2> {
+    fun getAllImageBitmap(): List<ImageBitmapData> {
         return lines.flatMap { myLines -> myLines.listLines }
             .mapNotNull { myLine -> myLine.imageBitmap }
     }
@@ -21,7 +21,7 @@ data class MyLines(
     /*var youtube:String*/
 )
 
-data class MyLine(var line: List<PointF>?,var lineEraser: List<RectF?>?, val props: MyPaint?, var imageBitmap: ImageBitmap2?){
+data class MyLine(var line: List<PointF>?,var lineEraser: List<RectF?>?, val props: MyPaint?, var imageBitmap: ImageBitmapData?){
     fun toPath():Path?{
         if(line!=null) {
             val path = Path()

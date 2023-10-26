@@ -3,13 +3,13 @@ package com.orbys.demowhiteboard.ui.whiteboard
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.RectF
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
 import android.util.Log
 import android.widget.Toast
 import com.orbys.demowhiteboard.core.GlobalConfig
+import com.orbys.demowhiteboard.domain.DrawFunctions
 import com.orbys.demowhiteboard.domain.drawline.AccelerateDrawLineActor
 import com.orbys.demowhiteboard.domain.drawline.DrawLineActor
 import com.orbys.demowhiteboard.domain.drawline.LineData
@@ -17,11 +17,10 @@ import com.orbys.demowhiteboard.domain.eraser.AccelerateEraserActor
 import com.orbys.demowhiteboard.domain.eraser.EraseData
 import com.orbys.demowhiteboard.domain.eraser.EraserActor
 import com.orbys.demowhiteboard.domain.model.ImageBitmap
-import com.orbys.demowhiteboard.domain.model.ImageBitmap2
+import com.orbys.demowhiteboard.domain.model.ImageBitmapData
 import com.orbys.demowhiteboard.domain.model.MyLine
 import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.domain.model.MyPaint
-import com.orbys.demowhiteboard.ui.core.DrawFunctions
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.skg.drawaccelerate.AccelerateManager
 
@@ -34,7 +33,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
     private val mHandler: Handler
 
     // Imagen seleccionada para mover
-    private var selectedImage: ImageBitmap2? = null
+    private var selectedImage: ImageBitmapData? = null
 
     //private val mEraserIndicatorPaint = Paint()
     private val mEraserPaint = MyPaint(ereaser = true)
@@ -75,7 +74,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         mHandler.obtainMessage(WriteCommand.UNDO).sendToTarget()
     }
 
-    fun moveBitmap(data: Pair<ImageBitmap2, String>) {
+    fun moveBitmap(data: Pair<ImageBitmapData, String>) {
         mHandler.obtainMessage(WriteCommand.MOVE_BITMAP, data).sendToTarget()
     }
 
@@ -259,7 +258,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             }
 
             WriteCommand.MOVE_BITMAP -> {
-                val obj = msg.obj as? Pair<ImageBitmap2, String> ?: return true
+                val obj = msg.obj as? Pair<ImageBitmapData, String> ?: return true
                 selectedImage = obj.first
                 selectedImage?.let { image ->
                     if (obj.second != "finish") {
@@ -276,45 +275,12 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
                 Log.d("IMAGE", "NO EMPTY")
 
-                val x = 50 // Posición inicial X
-                val y = 50 // Posición Y fija para todos los bitmaps
-
-                val originalWidth = data.image.width.toFloat()
-                val originalHeight = data.image.height.toFloat()
-
-                val maxWidth = 1000f // Ancho máximo permitido
-                val maxHeight = 1000f // Altura máxima permitida
-
-                // Calcula las proporciones para ajustar el ancho y el alto del bitmap
-                val ratio = originalWidth / originalHeight
-                var newWidth = if (originalWidth > maxWidth) maxWidth else originalWidth
-                var newHeight = newWidth / ratio
-
-                // Verifica si la altura supera el límite permitido
-                if (newHeight > maxHeight) {
-                    val scaleRatio = maxHeight / newHeight
-                    newHeight *= scaleRatio
-                    newWidth *= scaleRatio
-                }
-
-                // Crea el rectángulo de destino con la posición X actual, posición Y y tamaño del bitmap ajustado
-                val dstRect = RectF(
-                    x.toFloat(),
-                    y.toFloat(),
-                    x + newWidth,
-                    y + newHeight
-                )
-
-
-                val myImage = ImageBitmap2(
-                    data.image, x.toFloat(), y.toFloat(),
-                    newWidth, newHeight
-                )
+                val result = DrawFunctions.getImageAndRect(data)
 
                 // Dibuja el bitmap en el canvas en la posición y tamaño especificados
-                mBufferCanvas?.drawBitmap(data.image, null, dstRect, null)
+                mBufferCanvas?.drawBitmap(result.bitmapData.image, null, result.rectF, null)
 
-                myLines.add(MyLine(null, null, null, myImage))
+                myLines.add(MyLine(null, null, null, result.bitmapData))
 
                 render()
             }
@@ -347,41 +313,47 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
     fun onRender(canvas: Canvas) {
         Log.d(TAG, "onRender()")
-        canvas.drawBitmap(GlobalConfig.backgroundBitmap, 0f, 0f, null)
-        mDisplayBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+        try {
+            canvas.drawBitmap(GlobalConfig.backgroundBitmap, 0f, 0f, null)
+            mDisplayBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception onRender -> $e")
+        }
         // También puedes agregar aquí otras operaciones de dibujo específicas en el lienzo.
         // Por ejemplo, dibujar elementos adicionales sobre el lienzo principal.
 
 
         //TODO: revisar si se puede pintar encima de la imagen
-        selectedImage?.let { imageSelected->
-            myLines.forEach { line ->
-                /*  if (line.props != null) {
-                      if (!line.props.ereaser) {
-                          val lineData = LineData(line.props.color, line.props.strokeWidth)
-                          line.line!!.forEach { point ->
-                              lineData.addPoint(point.x, point.y)
-                          }
-                          canvas.drawPath(lineData.toPath(), line.props.toPaint())
-                      } else {
-                          line.lineEraser!!.forEach { rect ->
-                              if (rect != null) {
-                                  canvas.drawRect(rect, line.props.toPaint())
-                              }
-                          }
-                      }
-                  }else{*/
-                    if (line.imageBitmap != null) {
-                        if (line.imageBitmap!!.image == imageSelected.image) {
-                            val result = DrawFunctions.scaleRotateTranslateBitmap(imageSelected)
-                            canvas.drawBitmap(result.bitmap, null, result.rectF, null)
-                        } else {
-                            val result = DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
-                            canvas.drawBitmap(result.bitmap, null, result.rectF, null)
-                        }
-                    }
-                //}
-            }
+        selectedImage?.let { imageSelected ->
+            val result = DrawFunctions.scaleRotateTranslateBitmap(imageSelected)
+            canvas.drawBitmap(result.bitmap, null, result.rectF, null)
+            /* myLines.forEach { line ->
+                   if (line.props != null) {
+                       if (!line.props.ereaser) {
+                           val lineData = LineData(line.props.color, line.props.strokeWidth)
+                           line.line!!.forEach { point ->
+                               lineData.addPoint(point.x, point.y)
+                           }
+                           canvas.drawPath(lineData.toPath(), line.props.toPaint())
+                       } else {
+                           line.lineEraser!!.forEach { rect ->
+                               if (rect != null) {
+                                   canvas.drawRect(rect, line.props.toPaint())
+                               }
+                           }
+                       }
+                   }else{
+                     if (line.imageBitmap != null) {
+                         if (line.imageBitmap!!.image == imageSelected.image) {
+                             val result = DrawFunctions.scaleRotateTranslateBitmap(imageSelected)
+                             canvas.drawBitmap(result.bitmap, null, result.rectF, null)
+                         } else {
+                             val result = DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
+                             canvas.drawBitmap(result.bitmap, null, result.rectF, null)
+                         }
+                     }
+                 }
+             }*/
         }
     }
 
