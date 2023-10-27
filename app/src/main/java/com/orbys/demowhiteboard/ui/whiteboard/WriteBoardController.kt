@@ -205,7 +205,6 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                         )
                         canvas.drawBitmap(bitmapWallpaper, 0f, 0f, null)
                     } else {
-
                         if (GlobalConfig.backgroundColor != null) {
                             canvas.drawColor(GlobalConfig.backgroundColor!!)
                         } else {
@@ -239,7 +238,6 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                     } else {
                         if (it.imageBitmap != null) {
                             val result = DrawFunctions.scaleRotateTranslateBitmap(it.imageBitmap!!)
-
                             offscreenCanvas.drawBitmap(result.bitmap, null, result.rectF, null)
                         }
                     }
@@ -272,8 +270,6 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             WriteCommand.DRAW_BITMAP -> {
                 val obj = msg.obj as? ImageBitmap ?: return true
                 val data: ImageBitmap = obj
-
-                Log.d("IMAGE", "NO EMPTY")
 
                 val result = DrawFunctions.getImageAndRect(data)
 
@@ -400,7 +396,10 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 myLines,
                 GlobalConfig.backgroundWallpaper,
                 GlobalConfig.backgroundColor,
-                123,
+                GlobalConfig.listYoutube
+                    .filter { it.page == GlobalConfig.currentPage }
+                    .map { it.copy(viewer = null) }
+                    .toList(),
                 GlobalConfig.currentPage
             )
         )
@@ -452,7 +451,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 myLines,
                 GlobalConfig.backgroundWallpaper,
                 GlobalConfig.backgroundColor,
-                123,
+                GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage }.toList(),
                 GlobalConfig.currentPage
             )
         )

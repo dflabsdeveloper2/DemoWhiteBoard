@@ -166,7 +166,7 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
                                         listOf(MyLine(null, null, null, selected)),
                                         GlobalConfig.backgroundWallpaper,
                                         GlobalConfig.backgroundColor,
-                                        123,
+                                        GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage },
                                         GlobalConfig.currentPage
                                     )
                                 )
@@ -176,12 +176,12 @@ class ImageBitmapDistribute(mController: WriteBoardController) : Distribute {
                         }
                     }
 
-                    selected = null
-
                     GlobalConfig.listMyWhiteBoard?.let {
                         mWriteBoardController.drawSaved(it.lines.first { it.page == GlobalConfig.currentPage })
                     }
                 }
+
+                selected = null
 
                 //al levantar calcular si se ha cerrado, y las lineas dentro
             }

@@ -3,6 +3,7 @@ package com.orbys.demowhiteboard.domain.model
 import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.RectF
+import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
 
 
 data class MyWhiteboard(var lines: MutableList<MyLines>) {
@@ -24,9 +25,9 @@ data class MyWhiteboard(var lines: MutableList<MyLines>) {
             val allLinesPerPage:List<MyLine> = lines.flatMap { it.listLines }
             val backgroundWallpaper = lines.lastOrNull()?.backgroundWallpaper
             val backgroundColor = lines.lastOrNull()?.backgroundColor
-            val video = lines.lastOrNull()?.video ?: 0
+            val youtubeList = lines.flatMap { it.listYoutube }
 
-            val myLine = MyLines(allLinesPerPage, backgroundWallpaper, backgroundColor, video, page)
+            val myLine = MyLines(allLinesPerPage, backgroundWallpaper, backgroundColor, youtubeList, page)
             result.add(myLine)
         }
 
@@ -38,9 +39,8 @@ data class MyLines(
     var listLines: List<MyLine>,
     var backgroundWallpaper:String?,
     var backgroundColor: Int?,
-    var video: Int,
+    var listYoutube: List<YoutubeVideo>,
     var page: Int,
-    /*var youtube:String*/
 )
 
 data class MyLine(var line: List<PointF>?,var lineEraser: List<RectF?>?, val props: MyPaint?, var imageBitmap: ImageBitmapData?){

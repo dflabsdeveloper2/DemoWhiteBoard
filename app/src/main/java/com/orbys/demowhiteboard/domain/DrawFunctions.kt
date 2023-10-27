@@ -160,13 +160,16 @@ object DrawFunctions {
         val combinedMatrix = Matrix()
         combinedMatrix.setConcat(rotationMatrix, translationMatrix)
 
+        // Crea un Bitmap premultiplicado a partir del Bitmap original
+        val premultipliedBitmap = myImage.image.copy(Bitmap.Config.ARGB_8888, true)
+
         // Crear un bitmap rotado, escalado y trasladado
         val transformedBitmap = Bitmap.createBitmap(
-            myImage.image,
+            premultipliedBitmap,
             0,
             0,
-            myImage.image.width,
-            myImage.image.height,
+            premultipliedBitmap.width,
+            premultipliedBitmap.height,
             combinedMatrix,
             true
         )
