@@ -10,11 +10,14 @@ import com.orbys.demowhiteboard.domain.model.ImageBitmap
 import com.orbys.demowhiteboard.domain.model.ImageBitmapData
 import com.orbys.demowhiteboard.domain.model.ImageTransformResult
 import com.orbys.demowhiteboard.domain.model.ImageTransformResultData
+import com.orbys.demowhiteboard.domain.model.MyLine
 import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.domain.model.ScaleResult
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -96,28 +99,6 @@ object DrawFunctions {
         }
 
         return null
-    }
-
-    fun rotateImage(imageSelected: ImageBitmapData, event: MotionEvent): ImageBitmapData {
-        // Calcula el ángulo entre los dedos en grados
-        val deltaX = event.getX(0) - event.getX(1)
-        val deltaY = event.getY(0) - event.getY(1)
-        val radians = atan2(deltaY.toDouble(), deltaX.toDouble())
-        var degrees = Math.toDegrees(radians).toFloat()
-
-        // Asegúrate de que el ángulo esté en el rango [0, 360)
-        degrees = (degrees + 360) % 360
-
-        // Rotación con tres o más dedos
-        imageSelected.rotation = degrees
-
-        // Restringe la rotación para evitar giros excesivos
-        if (imageSelected.rotation < 0) {
-            imageSelected.rotation += 360f
-        }
-
-        // Devuelve el objeto ImageBitmap2 rotado
-        return imageSelected
     }
 
     fun calculateRotation(event: MotionEvent): Float {
@@ -310,28 +291,32 @@ object DrawFunctions {
         return Pair(scaledX, scaledY)
     }
 
-    fun checkIfLineClosed(points: List<PointF>): RectF? {
-        if (points.size < 2) {
-            return null
+    fun checkIfLineClosed(points: List<PointF>): Boolean {
+        if (points.size < 3) {
+            return false // Un polígono debe tener al menos 3 puntos
         }
 
-        val minX = points.minBy { it.x }.x ?: return null
-        val maxX = points.maxBy { it.x }.x ?: return null
-        val minY = points.minBy { it.y }.y ?: return null
-        val maxY = points.maxBy { it.y }.y ?: return null
+        val lineSegments = mutableListOf<Pair<PointF, PointF>>()
 
-        // Verifica si el primer y último punto están cerca para determinar si la línea está cerrada
-        val firstPoint = points[0]
-        val lastPoint = points[points.size - 1]
-        val distanceThreshold = 10f // Umbral de distancia para considerar que la línea está cerrada
-
-        if (Math.abs(firstPoint.x - lastPoint.x) <= distanceThreshold &&
-            Math.abs(firstPoint.y - lastPoint.y) <= distanceThreshold
-        ) {
-            return RectF(minX, minY, maxX, maxY)
+        // Crear segmentos de línea a partir de los puntos
+        for (i in 0 until points.size - 1) {
+            val segmentStart = points[i]
+            val segmentEnd = points[i + 1]
+            lineSegments.add(Pair(segmentStart, segmentEnd))
         }
 
-        return null
+        // Verificar intersecciones entre segmentos de línea
+        for (i in 0 until lineSegments.size - 1) {
+            val segment1 = lineSegments[i]
+            for (j in i + 1 until lineSegments.size) {
+                val segment2 = lineSegments[j]
+                if (doSegmentsIntersect(segment1.first, segment1.second, segment2.first, segment2.second)) {
+                    return true // Hay una intersección, el polígono está cerrado
+                }
+            }
+        }
+
+        return false // No hay intersecciones, el polígono no está cerrado
     }
 
     fun getImageAndRect(data: ImageBitmap): ImageTransformResultData {
@@ -371,5 +356,125 @@ object DrawFunctions {
         )
 
         return ImageTransformResultData(myImage,dstRect)
+    }
+
+    fun calculateRectFFromPoints(points: List<PointF>): RectF {
+        if (points.isEmpty()) {
+            // Si la lista está vacía, devuelve un RectF vacío
+            return RectF()
+        }
+
+        // Inicializa los límites del RectF con los valores del primer punto
+        var left = points[0].x
+        var top = points[0].y
+        var right = points[0].x
+        var bottom = points[0].y
+
+        // Encuentra los límites del RectF
+        for (point in points) {
+            left = min(left, point.x)
+            top = min(top, point.y)
+            right = max(right, point.x)
+            bottom = max(bottom, point.y)
+        }
+
+        // Crea y devuelve el RectF con los límites encontrados
+        return RectF(left, top, right, bottom)
+    }
+
+    fun getListLinesSelected(listPoints: List<PointF>): List<MyLine> {
+        val newList = mutableListOf<MyLine>()
+        val list = GlobalConfig.listMyWhiteBoard?.lines
+
+        if (list.isNullOrEmpty()) return newList
+
+        if(checkIfLineClosed(listPoints)) {
+            for (whiteboard in list) {
+                for (myLine in whiteboard.listLines) {
+                    if (!myLine.line.isNullOrEmpty()) {
+                        if (doLinesIntersect(myLine.line!!, listPoints) || myLine.line!!.all { pointIsInsidePolygon(it, listPoints) }) {
+                            // Crea una nueva instancia de MyLine con las líneas intersectadas y agrega a newList
+                            val intersectedLine = MyLine(
+                                myLine.line,
+                                myLine.lineEraser,
+                                myLine.props,
+                                myLine.imageBitmap
+                            )
+                            newList.add(intersectedLine)
+                        }
+                    }
+                }
+            }
+        }
+
+        return newList
+    }
+
+    private fun pointIsInsidePolygon(point: PointF, polygon: List<PointF>): Boolean {
+        var crossings = 0
+        for (i in 0 until polygon.size - 1) {
+            val a = polygon[i]
+            val b = polygon[i + 1]
+            if (point.y > Math.min(a.y, b.y) &&
+                point.y <= Math.max(a.y, b.y) &&
+                point.x <= Math.max(a.x, b.x) &&
+                a.y != b.y
+            ) {
+                val xIntersection = (point.y - a.y) * (b.x - a.x) / (b.y - a.y) + a.x
+                if (a.x == b.x || point.x <= xIntersection) {
+                    crossings++
+                }
+            }
+        }
+        // Si hay un número impar de cruces, el punto está dentro del polígono
+        return crossings % 2 != 0
+    }
+
+    private fun doLinesIntersect(line1: List<PointF>, line2: List<PointF>): Boolean {
+        for (i in 1 until line1.size) {
+            val p1 = line1[i - 1]
+            val p2 = line1[i]
+            for (j in 1 until line2.size) {
+                val p3 = line2[j - 1]
+                val p4 = line2[j]
+                if (doSegmentsIntersect(p1, p2, p3, p4)) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun doSegmentsIntersect(p1: PointF, p2: PointF, p3: PointF, p4: PointF): Boolean {
+        val s1_x = p2.x - p1.x
+        val s1_y = p2.y - p1.y
+        val s2_x = p4.x - p3.x
+        val s2_y = p4.y - p3.y
+
+        val s = (-s1_y * (p1.x - p3.x) + s1_x * (p1.y - p3.y)) / (-s2_x * s1_y + s1_x * s2_y)
+        val t = (s2_x * (p1.y - p3.y) - s2_y * (p1.x - p3.x)) / (-s2_x * s1_y + s1_x * s2_y)
+
+        return s in 0.0..1.0 && t in 0.0..1.0
+    }
+
+    fun rotateRectAndPoints(rectF: RectF, pointsInsideRect: List<PointF>, degrees: Float): Pair<RectF, List<PointF>> {
+        // Crear una matriz de rotación
+        val matrix = Matrix()
+        matrix.setRotate(degrees, rectF.centerX(), rectF.centerY())
+
+        // Rotar el RectF
+        val rotatedRectF = RectF(rectF)
+        matrix.mapRect(rotatedRectF)
+
+        // Rotar los puntos
+        val rotatedPoints = pointsInsideRect.map { point ->
+            val tempPoint = FloatArray(2)
+            tempPoint[0] = point.x
+            tempPoint[1] = point.y
+            matrix.mapPoints(tempPoint)
+            PointF(tempPoint[0], tempPoint[1])
+        }
+
+        return Pair(rotatedRectF, rotatedPoints)
     }
 }

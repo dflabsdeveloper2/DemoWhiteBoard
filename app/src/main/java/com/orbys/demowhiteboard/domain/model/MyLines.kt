@@ -10,6 +10,28 @@ data class MyWhiteboard(var lines: MutableList<MyLines>) {
         return lines.flatMap { myLines -> myLines.listLines }
             .mapNotNull { myLine -> myLine.imageBitmap }
     }
+
+    fun getAllPointsLine(): List<List<PointF>>{
+        return lines.flatMap { myLines -> myLines.listLines }
+            .mapNotNull { myLine -> myLine.line }
+    }
+
+    fun groupByPage(): List<MyLines> {
+        val groupedLines = lines.groupBy { it.page }
+        val result = mutableListOf<MyLines>()
+
+        for ((page, lines) in groupedLines) {
+            val allLinesPerPage:List<MyLine> = lines.flatMap { it.listLines }
+            val backgroundWallpaper = lines.lastOrNull()?.backgroundWallpaper
+            val backgroundColor = lines.lastOrNull()?.backgroundColor
+            val video = lines.lastOrNull()?.video ?: 0
+
+            val myLine = MyLines(allLinesPerPage, backgroundWallpaper, backgroundColor, video, page)
+            result.add(myLine)
+        }
+
+        return result
+    }
 }
 
 data class MyLines(
