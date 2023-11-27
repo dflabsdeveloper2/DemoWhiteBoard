@@ -11,8 +11,12 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.orbys.demowhiteboard.core.GlobalConfig
+import com.orbys.demowhiteboard.domain.DrawFunctions
 import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 
 class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
@@ -36,20 +40,13 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
         isMoveModeEnabled = false
     }
 
-    fun addYouTubePlayer(youTubePlayerView: YouTubePlayerView, x: Float, y: Float, page:Int) {
+    fun addYouTubePlayer(origin: YoutubeVideo) {
         if (youtubeVideos.size < GlobalConfig.numMaxYoutubePage) {
+            val youTubePlayerView = initializeYouTubePlayerView(context,origin.id)
+
             Log.d("YOUTUBE", "add youtube")
-            val video = YoutubeVideo(
-                youTubePlayerView,
-                x,
-                y,
-                600,
-                400,
-                0f,
-                1f,
-                1f,
-                page
-            )
+            val video = origin.apply { viewer = youTubePlayerView }
+
             youtubeVideos.add(video)
             val layoutParams = LayoutParams(video.width, LayoutParams.WRAP_CONTENT)
             layoutParams.leftMargin = x.toInt()
@@ -75,17 +72,23 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
         youtubeVideos.clear()
         if (videoList.size < GlobalConfig.numMaxYoutubePage) {
             for (video in videoList) {
+                if (video.viewer == null){
+                    video.viewer = initializeYouTubePlayerView(context,video.id)
+                }
+
                 // Añade el video al FrameLayout
                 val layoutParams = LayoutParams(video.width, video.height)
                 layoutParams.leftMargin = video.x.toInt()
                 layoutParams.topMargin = video.y.toInt()
-                video.viewer.layoutParams = layoutParams
+                video.viewer?.let {
+                    it.layoutParams = layoutParams
+                    it.rotation = video.rotation
+                    it.scaleX = video.scaleX.coerceIn(1f, 3f)
+                    it.scaleY = video.scaleY.coerceIn(1f, 3f)
 
-                video.viewer.rotation = video.rotation
-                video.viewer.scaleX = video.scaleX.coerceIn(1f, 3f)
-                video.viewer.scaleY = video.scaleY.coerceIn(1f, 3f)
+                    addView(it)
+                }
 
-                addView(video.viewer)
                 youtubeVideos.add(video)
             }
         }
@@ -101,10 +104,10 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
         video.x = limitedX
         video.y = limitedY
 
-        val layoutParams = video.viewer.layoutParams as LayoutParams
+        val layoutParams = video.viewer?.layoutParams as LayoutParams
         layoutParams.leftMargin = limitedX.toInt()
         layoutParams.topMargin = limitedY.toInt()
-        video.viewer.layoutParams = layoutParams
+        video.viewer?.layoutParams = layoutParams
     }
 
     private fun removeYouTubePlayer(video: YoutubeVideo) {
@@ -126,15 +129,6 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
         return isMoveModeEnabled
     }
 
-    private fun getFingerSpacing(event: MotionEvent): Float {
-        if (event.pointerCount >= 2) {
-            val x = event.getX(0) - event.getX(1)
-            val y = event.getY(0) - event.getY(1)
-            return kotlin.math.sqrt((x * x + y * y).toDouble()).toFloat()
-        }
-        return 1f
-    }
-
     private var initialFingerSpacing = 1f
     private var initialScaleX = 1f
     private var initialScaleY = 1f
@@ -146,7 +140,7 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                     lastX = event.x
                     lastY = event.y
                     selectedVideo = findSelectedVideo(event.x, event.y)
-                    initialFingerSpacing = getFingerSpacing(event)
+                    initialFingerSpacing = DrawFunctions.getFingerSpacing(event)
 
                     if (selectedVideo == null) return super.onTouchEvent(event)
                 }
@@ -154,47 +148,28 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                 MotionEvent.ACTION_MOVE -> {
                     selectedVideo?.let { video ->
                         if (event.pointerCount > 1) {
-                            // Calcula la nueva distancia entre los dedos para escalar
-                            val newSpacing = getFingerSpacing(event)
+                            val newScale = DrawFunctions.scaleImage(
+                                video.x,
+                                video.y,
+                                video.width.toFloat(),
+                                video.height.toFloat(),
+                                event,
+                                initialFingerSpacing,
+                                300f
+                            )
+                            newScale?.let {
+                                video.x = it.x
+                                video.y = it.y
+                                video.width = it.width.toInt()
+                                video.height = it.height.toInt()
 
-                            // Calcula el factor de escala basado en las distancias inicial y actual
-                            if (newSpacing > 0 && initialFingerSpacing > 0) {
-                                // Aplica el escalado al video dentro de los límites mínimo y máximo
-
-                                val scaleFactor =
-                                    (newSpacing / (initialFingerSpacing * 100)).coerceIn(1f, 3f)
-
-                                video.scaleX = scaleFactor
-                                video.scaleY = scaleFactor
-
-                                // Calcula el desplazamiento en las coordenadas x y y después del escalado
-                                val deltaX =
-                                    video.x + video.width * (scaleFactor - video.scaleX) / 2 - video.x
-                                val deltaY =
-                                    video.y + video.height * (scaleFactor - video.scaleY) / 2 - video.y
-
-                                // Ajusta las coordenadas x y y para mantener el margen y evitar que se salgan de la pantalla
-                                val limitedX = (video.x - deltaX).coerceIn(
-                                    marginThreshold.toFloat(),
-                                    (width - video.width - marginThreshold).toFloat()
-                                )
-                                val limitedY = (video.y - deltaY).coerceIn(
-                                    marginThreshold.toFloat(),
-                                    (height - video.height - marginThreshold).toFloat()
-                                )
-
-                                // Aplica el escalado y ajusta las coordenadas
-                                video.x = limitedX
-                                video.y = limitedY
-
-                                val layoutParams = video.viewer.layoutParams as LayoutParams
-                                layoutParams.width = (video.width * video.scaleX).toInt()
-                                layoutParams.height = (video.height * video.scaleY).toInt()
+                                val layoutParams = video.viewer?.layoutParams as LayoutParams
+                                layoutParams.width = video.width
+                                layoutParams.height = video.height
                                 layoutParams.leftMargin = video.x.toInt()
                                 layoutParams.topMargin = video.y.toInt()
-                                video.viewer.layoutParams = layoutParams
-                            } else {
-                                //NADA
+                                video.viewer?.layoutParams = layoutParams
+
                             }
                         } else {
                             selectedVideo?.let { video ->
@@ -228,7 +203,7 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
 
     private fun findSelectedVideo(x: Float, y: Float): YoutubeVideo? {
         for (video in youtubeVideos) {
-            if (isViewContains(video.viewer, x, y)) {
+            if (video.viewer?.let { isViewContains(it, x, y) } == true) {
                 return video
             }
         }
@@ -277,9 +252,9 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
                         video.rotation -= rotationSpeed
                     }
 
-                    video.viewer.rotation = video.rotation
-                    video.viewer.scaleX = video.scaleX
-                    video.viewer.scaleY = video.scaleY
+                    video.viewer?.rotation = video.rotation
+                    video.viewer?.scaleX = video.scaleX
+                    video.viewer?.scaleY = video.scaleY
                 }
             }
             // Actualiza los valores previos para el siguiente movimiento
@@ -287,5 +262,25 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
             prevY = e2.y
             return true
         }
+    }
+
+    private fun initializeYouTubePlayerView(context: Context,videoId: String): YouTubePlayerView {
+        val playerView = YouTubePlayerView(context)
+        playerView.enableAutomaticInitialization = false
+        val listenner = object : AbstractYouTubePlayerListener() {
+            override fun onReady(youTubePlayer: YouTubePlayer) {
+                /* val defaultPlayerUiController =
+                     DefaultPlayerUiController(playerView, youTubePlayer)
+                 playerView.setCustomPlayerUi(defaultPlayerUiController.rootView)*/
+
+                youTubePlayer.cueVideo(videoId, 0f)
+            }
+        }
+        val options: IFramePlayerOptions =
+            IFramePlayerOptions.Builder().controls(1).build()
+
+        playerView.initialize(listenner,options)
+
+        return playerView
     }
 }

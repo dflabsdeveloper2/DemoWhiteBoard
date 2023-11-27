@@ -3,7 +3,8 @@ package com.orbys.demowhiteboard.ui.youtube.model
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 
 data class YoutubeVideo(
-    val viewer: YouTubePlayerView,
+    val id:String,
+    var viewer: YouTubePlayerView?,
     var x: Float,
     var y: Float,
     var width: Int,

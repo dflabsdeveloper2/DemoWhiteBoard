@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -28,8 +29,10 @@ class GoogleImagesFragment : Fragment() {
     private lateinit var adapterGoogle: AdapterGoogle
 
     private lateinit var listImages: MutableList<ImageModel>
+    private lateinit var licenseSwitch: SwitchCompat
+    private lateinit var safeSearSwitch: SwitchCompat
 
-    companion object{
+    companion object {
         const val KEY_RESULT_GOOGLE = "key_google_images_result"
         const val KEY_URL_GOOGLE = "url_google_image"
     }
@@ -57,6 +60,8 @@ class GoogleImagesFragment : Fragment() {
 
     private fun iniValues() {
         listImages = mutableListOf()
+        licenseSwitch = binding.swLicense
+        safeSearSwitch = binding.swSafeSearch
     }
 
     private fun initReciclerView() {
@@ -78,13 +83,19 @@ class GoogleImagesFragment : Fragment() {
             // Handle the IME options
             when (actionId) {
                 EditorInfo.IME_ACTION_GO -> {
-                    Log.d("GOOGLE","CLICK")
+                    Log.d("GOOGLE", "CLICK")
                     v.hideKeyboard()
                     listImages.clear()
                     // Do something when the user presses "Done"
                     val wordSearch = binding.etSearchImages.text.toString()
-                    val licenseCheck = binding.swLicense.isChecked
-                    val safeSearchCheck = binding.swLicense.isChecked
+                    val licenseCheck = licenseSwitch.isChecked
+                    val safeSearchCheck = safeSearSwitch.isChecked
+
+                    Log.d(
+                        "GOOGLE",
+                        "license check -> $licenseCheck    safesearch check -> $safeSearchCheck"
+                    )
+
                     if (wordSearch.isNotBlank()) {
                         binding.pbLoading.isVisible = true
                         lifecycleScope.launch {
@@ -92,66 +103,71 @@ class GoogleImagesFragment : Fragment() {
                             val apikey = context?.resources?.getString(R.string.api_key).orEmpty()
                             val motor = context?.resources?.getString(R.string.api_cx).orEmpty()
 
-                           val listImagesApi = withContext(Dispatchers.IO) {
-                               try {
-                                   when {
-                                       licenseCheck && safeSearchCheck -> {
-                                           RetrofitClient.serviceImage.getListImages(
-                                               key = apikey,
-                                               motor = motor,
-                                               searchWord = wordSearch,
-                                               licencia = Util.rights,
-                                               safesearch = Util.safe,
-                                               type = Util.searchType,
-                                               num = Util.num
-                                           )
-                                       }
+                            val listImagesApi = withContext(Dispatchers.IO) {
+                                try {
+                                    when {
+                                        licenseCheck && safeSearchCheck -> {
+                                            Log.d("GOOGLE", "licenseCheck && safeSearchCheck")
+                                            RetrofitClient.serviceImage.getListImages(
+                                                key = apikey,
+                                                motor = motor,
+                                                searchWord = wordSearch,
+                                                licencia = Util.rights,
+                                                safesearch = Util.safe,
+                                                type = Util.searchType,
+                                                num = Util.num
+                                            )
+                                        }
 
-                                       licenseCheck && !safeSearchCheck -> {
-                                           RetrofitClient.serviceImage.getListImagesWithoutSafeSearch(
-                                               key = apikey,
-                                               motor = motor,
-                                               searchWord = wordSearch,
-                                               licencia = Util.rights,
-                                               type = Util.searchType,
-                                               num = Util.num
-                                           )
-                                       }
+                                        licenseCheck && !safeSearchCheck -> {
+                                            Log.d("GOOGLE", "licenseCheck && !safeSearchCheck")
+                                            RetrofitClient.serviceImage.getListImagesWithoutSafeSearch(
+                                                key = apikey,
+                                                motor = motor,
+                                                searchWord = wordSearch,
+                                                licencia = Util.rights,
+                                                type = Util.searchType,
+                                                num = Util.num
+                                            )
+                                        }
 
-                                       !licenseCheck && safeSearchCheck -> {
-                                           RetrofitClient.serviceImage.getListImagesWithoutLicense(
-                                               key = apikey,
-                                               motor = motor,
-                                               searchWord = wordSearch,
-                                               safesearch = Util.safe,
-                                               type = Util.searchType,
-                                               num = Util.num
-                                           )
-                                       }
+                                        !licenseCheck && safeSearchCheck -> {
+                                            Log.d("GOOGLE", "!licenseCheck && safeSearchCheck")
+                                            RetrofitClient.serviceImage.getListImagesWithoutLicense(
+                                                key = apikey,
+                                                motor = motor,
+                                                searchWord = wordSearch,
+                                                safesearch = Util.safe,
+                                                type = Util.searchType,
+                                                num = Util.num
+                                            )
+                                        }
 
-                                       else -> {
-                                           RetrofitClient.serviceImage.getListImagesWithoutSafeSearchAndLicense(
-                                               key = apikey,
-                                               motor = motor,
-                                               searchWord = wordSearch,
-                                               type = Util.searchType,
-                                               num = Util.num
-                                           )
-                                       }
-                                   }
-                               } catch (e: Exception) {
-                                   withContext(Dispatchers.Main) {
-                                       Toast.makeText(context, "ERROR $e", Toast.LENGTH_SHORT)
-                                           .show()
-                                       binding.pbLoading.isVisible = false
-                                   }
-                                   null
-                               }
-                           }
+                                        else -> {
+                                            Log.d("GOOGLE", "else")
+                                            RetrofitClient.serviceImage.getListImagesWithoutSafeSearchAndLicense(
+                                                key = apikey,
+                                                motor = motor,
+                                                searchWord = wordSearch,
+                                                type = Util.searchType,
+                                                num = Util.num
+                                            )
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "ERROR $e", Toast.LENGTH_SHORT)
+                                            .show()
+                                        binding.pbLoading.isVisible = false
+                                    }
+                                    null
+                                }
+                            }
 
                             listImagesApi?.let {
-                                if (it.items.isNotEmpty()) {
-                                    listImages?.addAll(it.items.map { item ->
+                                listImages.clear()
+                                if (!it.items.isNullOrEmpty()) {
+                                    listImages.addAll(it.items.map { item ->
                                         ImageModel(
                                             item.link,
                                             item.title
@@ -160,10 +176,10 @@ class GoogleImagesFragment : Fragment() {
                                 }
                             }
 
-                            if(listImages.isNotEmpty()){
-                                Log.d("GOOGLE","prueba $listImages")
-                                adapterGoogle.updateList(listImages.toList())
-                            }
+
+                            Log.d("GOOGLE","prueba $listImages")
+                            adapterGoogle.updateList(listImages.toList())
+
                             binding.pbLoading.isVisible = false
                         }
                     } else {
