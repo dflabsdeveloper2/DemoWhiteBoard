@@ -733,7 +733,6 @@ class MainActivity : AppCompatActivity() {
                                 } catch (e: Exception) {
                                     Log.d("YOUTUBE", "Error inicializar $e")
                                 }
-
                             } else {
                                 Toast.makeText(this, "No hay archivo guardado", Toast.LENGTH_SHORT)
                                     .show()

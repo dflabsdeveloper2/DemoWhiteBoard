@@ -83,9 +83,9 @@ class WriteBoardController(private val context:Context, private val callBack: ()
     override fun handleMessage(msg: Message): Boolean {
         when (msg.what) {
             WriteCommand.DEBUG_LINE -> {
-                myLines.forEach {
+               /* myLines.forEach {
                     Log.d("LINES", "linia: $it")
-                }
+                }*/
             }
 
             WriteCommand.REDO -> {
@@ -138,7 +138,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 if(myLinesHistory.isNotEmpty()){
                     myUndoLines.add(myLinesHistory[myLinesHistory.size-1])
                     Log.d("UNDO", "myLinesHistory ${myLinesHistory.size}")
-                   clearToRender()
+                    clearToRender()
 
                     val listRedo = myLinesHistory.dropLast(1)
 
@@ -278,20 +278,19 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 val result = DrawFunctions.getImageAndRect(data)
 
                 // Dibuja el bitmap en el canvas en la posición y tamaño especificados
-                mStrokesCanvas?.drawBitmap(result.bitmapData.image, null, result.rectF, null)
+                //mStrokesCanvas?.drawBitmap(result.bitmapData.image, null, result.rectF, null)
             }
 
             WriteCommand.DRAW_BITMAP -> {
                 val obj = msg.obj as? ImageBitmap ?: return true
                 val data: ImageBitmap = obj
 
-                val result = DrawFunctions.getImageAndRect(data)
-                // Dibuja el bitmap en el canvas en la posición y tamaño especificados
+                val result = DrawFunctions.getImageAndRect(data)/*// Dibuja el bitmap en el canvas en la posición y tamaño especificados
                 mStrokesCanvas?.drawBitmap(result.bitmapData.image, null, result.rectF, null)
 
                 myLines.add(MyLine(null, null, null, result.bitmapData))
 
-                render()
+                render()*/
             }
 
             WriteCommand.DRAW_LINE_ACCELERATE -> {
@@ -326,6 +325,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         mStrokesBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
     }
 
+    //TODO: si quiero doble buffer, tendria que en el render pintar todo lo que tengo en mylines por lo de borrar
     private fun render() {
         callBack()
     }
@@ -377,15 +377,14 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             val canvas = Canvas(this)
             canvas.drawColor(GlobalConfig.defaultBackgroundColor)
         }
-        mStrokesBitmap = null
+        mStrokesBitmap?.recycle()
         mStrokesCanvas = null
         GlobalConfig.backgroundWallpaper = null
         GlobalConfig.backgroundColor = null
         myLines = mutableListOf()
         myUndoLines = mutableListOf()
         myLinesHistory = mutableListOf()
-        resize(GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT)
-        render()
+        clearToRender()
     }
 
 
