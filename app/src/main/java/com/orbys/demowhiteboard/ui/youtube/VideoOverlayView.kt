@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
-import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -225,43 +224,6 @@ class VideoOverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(con
             (location[1] + view.height * view.scaleY).toInt()
         )
         return rect.contains(scaledX.toInt(), scaledY.toInt())
-    }
-
-    private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
-        private var prevX: Float = 0f
-        private var prevY: Float = 0f
-        private val rotationSpeed: Float = 0.5f
-
-        override fun onScroll(
-            e1: MotionEvent?,
-            e2: MotionEvent,
-            distanceX: Float,
-            distanceY: Float
-        ): Boolean {
-            if (isScalingOrRotating) return false
-
-            selectedVideo?.let { video ->
-                if (e2.pointerCount >= 3 && e1 != null) {
-                    // Calcula la dirección del movimiento (izquierda o derecha) y aplica la rotación en consecuencia
-                    val deltaX = e2.x - prevX
-                    if (deltaX > 0) {
-                        // Movimiento hacia la derecha
-                        video.rotation += rotationSpeed
-                    } else if (deltaX < 0) {
-                        // Movimiento hacia la izquierda
-                        video.rotation -= rotationSpeed
-                    }
-
-                    video.viewer?.rotation = video.rotation
-                    video.viewer?.scaleX = video.scaleX
-                    video.viewer?.scaleY = video.scaleY
-                }
-            }
-            // Actualiza los valores previos para el siguiente movimiento
-            prevX = e2.x
-            prevY = e2.y
-            return true
-        }
     }
 
     private fun initializeYouTubePlayerView(context: Context,videoId: String): YouTubePlayerView {

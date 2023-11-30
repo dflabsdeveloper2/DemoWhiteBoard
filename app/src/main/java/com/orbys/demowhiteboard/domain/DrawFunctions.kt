@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.PointF
 import android.graphics.RectF
+import android.util.Log
 import android.view.MotionEvent
 import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.domain.model.ImageBitmap
@@ -147,6 +148,8 @@ object DrawFunctions {
         // Crear una matriz para la rotación
         val rotationMatrix = Matrix()
         rotationMatrix.postRotate(myImage.rotation)
+
+        Log.d("IMAGE", "rotation matrix ${myImage.rotation}")
 
         // Escalar el bitmap al tamaño deseado
         val scaledWidth = myImage.width

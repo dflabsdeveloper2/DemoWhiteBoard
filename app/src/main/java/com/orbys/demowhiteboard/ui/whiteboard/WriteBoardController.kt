@@ -3,7 +3,6 @@ package com.orbys.demowhiteboard.ui.whiteboard
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.RectF
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -26,12 +25,15 @@ import com.orbys.demowhiteboard.ui.core.Helper
 import com.skg.drawaccelerate.AccelerateManager
 
 class WriteBoardController(private val context:Context, private val callBack: () -> Unit) : Handler.Callback {
-    private var mBaseBitmap: Bitmap? = null
-    private var mBaseCanvas: Canvas? = null
-    private var mStrokesBitmap: Bitmap? = null
-    private var mStrokesCanvas: Canvas? = null
+    private var mDisplayBitmap: Bitmap? = null
+    private var mDisplayCanvas: Canvas? = null
+    private var mBufferBitmap: Bitmap? = null
+    private var mBufferCanvas: Canvas? = null
     private val mHandlerThread: HandlerThread = HandlerThread("temp-r")
     private val mHandler: Handler
+
+    // Imagen seleccionada para mover
+    private var selectedImage: ImageBitmapData? = null
 
     //private val mEraserIndicatorPaint = Paint()
     private val mEraserPaint = MyPaint(ereaser = true)
@@ -72,7 +74,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
         mHandler.obtainMessage(WriteCommand.UNDO).sendToTarget()
     }
 
-    fun moveBitmap(data: Pair<ImageBitmapData, String>) {
+    fun moveBitmap(data: Pair<ImageBitmapData?, String>) {
         mHandler.obtainMessage(WriteCommand.MOVE_BITMAP, data).sendToTarget()
     }
 
@@ -83,105 +85,103 @@ class WriteBoardController(private val context:Context, private val callBack: ()
     override fun handleMessage(msg: Message): Boolean {
         when (msg.what) {
             WriteCommand.DEBUG_LINE -> {
-               /* myLines.forEach {
+                myLines.forEach {
                     Log.d("LINES", "linia: $it")
-                }*/
+                }
             }
 
             WriteCommand.REDO -> {
                 Log.d("REDO", "REDO")
                 if (myUndoLines.isNotEmpty()) {
-                    val lastUndoneLine = myUndoLines.removeAt(myUndoLines.size - 1)
-                    myLines.add(lastUndoneLine)
+                    val lastRedoneLine = myUndoLines.removeAt(myUndoLines.size - 1)
+                    myLines.add(lastRedoneLine)
 
-                    myLines.forEach {
-                        if (it.props != null) {
-                            if (!it.props.ereaser) {
-                                val lineData = LineData(it.props.color, it.props.strokeWidth)
-                                it.line!!.forEach { point ->
-                                    lineData.addPoint(point.x, point.y)
-                                }
-                                mStrokesCanvas?.drawPath(lineData.toPath(), it.props.toPaint())
-                            } else {
-                                it.lineEraser!!.forEach { rect ->
-                                    if (rect != null) {
-                                        mStrokesCanvas?.drawRect(rect, it.props.toPaint())
-                                    }
-                                }
-                            }
-                        } else {
-                            if (it.imageBitmap != null) {
-                                val dstRect = RectF(
-                                    it.imageBitmap!!.x,
-                                    it.imageBitmap!!.y,
-                                    it.imageBitmap!!.x + it.imageBitmap!!.width,
-                                    it.imageBitmap!!.y + it.imageBitmap!!.height
-                                )
-
-                                mStrokesCanvas?.drawBitmap(
-                                    it.imageBitmap!!.image,
-                                    null,
-                                    dstRect,
-                                    null
-                                )
-                            }
-                        }
-                    }
-                    render()
-                }else{
-                    Toast.makeText(context,"No hay mas registros",Toast.LENGTH_SHORT).show()
-                }
-            }
-            WriteCommand.UNDO ->{
-                Log.d("UNDO", "UNDO")
-                myLinesHistory = myLines
-                if(myLinesHistory.isNotEmpty()){
-                    myUndoLines.add(myLinesHistory[myLinesHistory.size-1])
-                    Log.d("UNDO", "myLinesHistory ${myLinesHistory.size}")
                     clearToRender()
 
-                    val listRedo = myLinesHistory.dropLast(1)
-
-                    listRedo.forEach {
-                        if (it.props != null) {
-                            if (!it.props.ereaser) {
-                                val lineData = LineData(it.props.color, it.props.strokeWidth)
-                                it.line!!.forEach { point ->
+                    myLines.forEach { line ->
+                        if (line.props != null) {
+                            if (!line.props.ereaser) {
+                                val lineData = LineData(line.props.color, line.props.strokeWidth)
+                                line.line!!.forEach { point ->
                                     lineData.addPoint(point.x, point.y)
                                 }
-                                mStrokesCanvas?.drawPath(lineData.toPath(), it.props.toPaint())
+                                mDisplayCanvas?.drawPath(lineData.toPath(), line.props.toPaint())
                             } else {
-                                it.lineEraser!!.forEach { rect ->
+                                line.lineEraser!!.forEach { rect ->
                                     if (rect != null) {
-                                        mStrokesCanvas?.drawRect(rect, it.props.toPaint())
+                                        mDisplayCanvas?.drawRect(rect, line.props.toPaint())
                                     }
                                 }
                             }
                         } else {
-                            if (it.imageBitmap != null) {
-                                val dstRect = RectF(
-                                    it.imageBitmap!!.x,
-                                    it.imageBitmap!!.y,
-                                    it.imageBitmap!!.x + it.imageBitmap!!.width,
-                                    it.imageBitmap!!.y + it.imageBitmap!!.height
-                                )
-
-                                mStrokesCanvas?.drawBitmap(
-                                    it.imageBitmap!!.image,
-                                    null,
-                                    dstRect,
-                                    null
-                                )
-
+                            if (line.imageBitmap != null) {
+                                val result =
+                                    DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
+                                result?.let { image ->
+                                    mDisplayCanvas?.drawBitmap(
+                                        image.bitmap,
+                                        null,
+                                        image.rectF,
+                                        null
+                                    )
+                                }
                             }
                         }
                     }
 
                     render()
+                } else {
+                    Toast.makeText(context, "No hay más registros para rehacer", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
 
-                    myLines = listRedo.toMutableList()
-                }else{
-                    Toast.makeText(context,"No hay mas registros",Toast.LENGTH_SHORT).show()
+            WriteCommand.UNDO -> {
+                Log.d("UNDO", "UNDO")
+                if (myLines.isNotEmpty()) {
+                    val lastUndoneLine = myLines.removeAt(myLines.size - 1)
+                    myUndoLines.add(lastUndoneLine)
+
+                    clearToRender()
+
+                    myLines.forEach { line ->
+                        if (line.props != null) {
+                            if (!line.props.ereaser) {
+                                val lineData = LineData(line.props.color, line.props.strokeWidth)
+                                line.line!!.forEach { point ->
+                                    lineData.addPoint(point.x, point.y)
+                                }
+                                mDisplayCanvas?.drawPath(lineData.toPath(), line.props.toPaint())
+                            } else {
+                                line.lineEraser!!.forEach { rect ->
+                                    if (rect != null) {
+                                        mDisplayCanvas?.drawRect(rect, line.props.toPaint())
+                                    }
+                                }
+                            }
+                        } else {
+                            if (line.imageBitmap != null) {
+                                val result =
+                                    DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
+                                result?.let { image ->
+                                    mDisplayCanvas?.drawBitmap(
+                                        image.bitmap,
+                                        null,
+                                        image.rectF,
+                                        null
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    render()
+                } else {
+                    Toast.makeText(
+                        context,
+                        "No hay más registros para deshacer",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
@@ -214,7 +214,6 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                         )
                         canvas.drawBitmap(bitmapWallpaper, 0f, 0f, null)
                     } else {
-
                         if (GlobalConfig.backgroundColor != null) {
                             canvas.drawColor(GlobalConfig.backgroundColor!!)
                         } else {
@@ -247,19 +246,27 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                         }
                     } else {
                         if (it.imageBitmap != null) {
-                            val dstRect = RectF(
-                                it.imageBitmap!!.x,
-                                it.imageBitmap!!.y,
-                                it.imageBitmap!!.x + it.imageBitmap!!.width,
-                                it.imageBitmap!!.y + it.imageBitmap!!.height
-                            )
+                            Log.d("IMAGE", "image bitmap-> ${it.imageBitmap}")
+                            val result = DrawFunctions.scaleRotateTranslateBitmap(it.imageBitmap!!)
+                            Log.d("IMAGE", "result rotation ${result.rectF}")
+                            result.let { image ->
+                                try {
+                                    offscreenCanvas.drawBitmap(
+                                        image.bitmap,
+                                        null,
+                                        image.rectF,
+                                        null
+                                    )
+                                } catch (e: Exception) {
+                                    Log.d("IMAGE", "exception paint image -> $e")
+                                }
+                            }
 
-                            offscreenCanvas.drawBitmap(it.imageBitmap!!.image, null, dstRect, null)
                         }
                     }
                 }
 
-                mStrokesCanvas?.drawBitmap(offscreenBitmap, 0f, 0f, null)
+                mDisplayCanvas?.drawBitmap(offscreenBitmap, 0f, 0f, null)
 
                 render()
 
@@ -272,32 +279,52 @@ class WriteBoardController(private val context:Context, private val callBack: ()
             }
 
             WriteCommand.MOVE_BITMAP -> {
-                val obj = msg.obj as? ImageBitmap ?: return true
-                val data: ImageBitmap = obj
-
-                val result = DrawFunctions.getImageAndRect(data)
-
-                // Dibuja el bitmap en el canvas en la posición y tamaño especificados
-                //mStrokesCanvas?.drawBitmap(result.bitmapData.image, null, result.rectF, null)
+                val obj = msg.obj as? Pair<ImageBitmapData?, String> ?: return true
+                selectedImage = obj.first
+                selectedImage?.let { image ->
+                    //if (obj.second != "finish") {
+                    val result = DrawFunctions.scaleRotateTranslateBitmap(image)
+                    result.let { image ->
+                        Log.d(
+                            "TRANSFORM",
+                            "onRender ${image.bitmap.width} ${image.bitmap.height} ${image.rectF}"
+                        )
+                       /* mBufferBitmap = Bitmap.createBitmap(
+                            GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
+                            Bitmap.Config.ARGB_8888
+                        ).apply {
+                            val canvas = Canvas(this)
+                            GlobalConfig.backgroundColor?.let { canvas.drawColor(it) }
+                            canvas.drawBitmap(image.bitmap, null, image.rectF, null)
+                        }*/
+                        mBufferCanvas?.drawBitmap(image.bitmap, null, image.rectF, null)
+                    }
+                    render()
+                    //} else {
+                    selectedImage = null
+                    //}
+                }
             }
 
             WriteCommand.DRAW_BITMAP -> {
                 val obj = msg.obj as? ImageBitmap ?: return true
                 val data: ImageBitmap = obj
 
-                val result = DrawFunctions.getImageAndRect(data)/*// Dibuja el bitmap en el canvas en la posición y tamaño especificados
-                mStrokesCanvas?.drawBitmap(result.bitmapData.image, null, result.rectF, null)
+                val result = DrawFunctions.getImageAndRect(data)
+
+                // Dibuja el bitmap en el canvas en la posición y tamaño especificados
+                mDisplayCanvas?.drawBitmap(result.bitmapData.image, null, result.rectF, null)
 
                 myLines.add(MyLine(null, null, null, result.bitmapData))
 
-                render()*/
+                render()
             }
 
             WriteCommand.DRAW_LINE_ACCELERATE -> {
                 val obj = msg.obj as? LineData ?: return true
                 val data: LineData = obj
                 myLines.add(MyLine(data.getPoints(), null, data.paint, null))
-                mStrokesCanvas?.drawPath(data.toPath(), data.paint.toPaint())
+                mDisplayCanvas?.drawPath(data.toPath(), data.paint.toPaint())
             }
 
             WriteCommand.ERASER_ACCELERATE -> {
@@ -306,7 +333,7 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                 myLines.add(MyLine(null, data.regions, mEraserPaint, null))
                 for (region in data.regions) {
                     if (region != null) {
-                        mStrokesCanvas?.drawRect(region, mEraserPaint.toPaint())
+                        mDisplayCanvas?.drawRect(region, mEraserPaint.toPaint())
                     }
                 }
             }
@@ -321,22 +348,77 @@ class WriteBoardController(private val context:Context, private val callBack: ()
 
     fun onRender(canvas: Canvas) {
         Log.d(TAG, "onRender()")
-        canvas.drawBitmap(GlobalConfig.backgroundBitmap, 0f, 0f, null)
-        mStrokesBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+        try {
+            canvas.drawBitmap(GlobalConfig.backgroundBitmap, 0f, 0f, null)
+            mDisplayBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception onRender -> $e")
+        }
+        /* // También puedes agregar aquí otras operaciones de dibujo específicas en el lienzo.
+         // Por ejemplo, dibujar elementos adicionales sobre el lienzo principal.
+
+
+         //TODO: revisar si se puede pintar encima de la imagen
+         selectedImage?.let { imageSelected ->
+             val result = DrawFunctions.scaleRotateTranslateBitmap(imageSelected)
+             result?.let {image->
+                 Log.d("TRANSFORM","onRender ${image.bitmap.width} ${image.bitmap.height} ${image.rectF}")
+                 canvas.drawBitmap(image.bitmap, null, image.rectF, null)
+                 //canvas.drawRect(GlobalConfig.rectTrash,Paint().apply { color = Color.RED })
+             }
+         }*/
     }
 
-    //TODO: si quiero doble buffer, tendria que en el render pintar todo lo que tengo en mylines por lo de borrar
     private fun render() {
+        Log.d(TAG, "RENDER")
+        // Realizar otras operaciones de dibujo o lógica si es necesario.
+        // Por ejemplo, dibujar trazos adicionales en mBufferCanvas.
+
+        // Dibujar el búfer en el lienzo de visualización.
+        /* mBufferBitmap?.let {
+             mDisplayCanvas?.drawBitmap(it, 0f, 0f, null)
+         }*/
+
+        mBufferBitmap?.recycle()
+
+        /* myLines.forEach { line ->
+             if (line.props != null) {
+                 if (!line.props.ereaser) {
+                     val lineData = LineData(line.props.color, line.props.strokeWidth)
+                     line.line?.forEach { point ->
+                         lineData.addPoint(point.x, point.y)
+                     }
+                     mDisplayCanvas?.drawPath(lineData.toPath(), line.props.toPaint())
+                 } else {
+                     line.lineEraser?.forEach { rect ->
+                         if (rect != null) {
+                             mDisplayCanvas?.drawRect(rect, line.props.toPaint())
+                         }
+                     }
+                 }
+             }
+         }
+
+         myLines.filter { line -> line.props == null }.forEach {line->
+             if (line.imageBitmap != null) {
+                 val result = DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
+                 mDisplayCanvas?.drawBitmap(result.bitmap, null, result.rectF, null)
+             }
+         }
+ */
+        // Llamar al callback para notificar que el dibujo ha sido actualizado.
         callBack()
     }
 
     fun resize(width: Int, height: Int) {
-        mStrokesBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        mStrokesCanvas = Canvas(mStrokesBitmap!!)
-        mBaseBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        mBaseCanvas = Canvas(mBaseBitmap!!)
-    }
+        mBufferBitmap?.recycle() // Liberar el antiguo búfer de dibujo
+        mBufferBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        mBufferCanvas = Canvas(mBufferBitmap!!)
 
+        mDisplayBitmap?.recycle() // Liberar el antiguo búfer de visualización
+        mDisplayBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        mDisplayCanvas = Canvas(mDisplayBitmap!!)
+    }
     fun createDrawLineActor(id: Int): DrawLineActor {
         return AccelerateDrawLineActor(this, id, GlobalConfig.sPenColor, GlobalConfig.sPenWidth)
     }
@@ -370,26 +452,57 @@ class WriteBoardController(private val context:Context, private val callBack: ()
     }
 
     private fun clear() {
-        GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
-            GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT,
+        mBufferBitmap?.recycle() // Liberar el búfer de dibujo
+        mDisplayBitmap?.recycle() // Liberar el búfer de visualización
+
+        // Crear un nuevo búfer de dibujo y visualización
+        mBufferBitmap = Bitmap.createBitmap(
+            GlobalConfig.SCREEN_WIDTH,
+            GlobalConfig.SCREEN_HEIGHT,
             Bitmap.Config.ARGB_8888
+        )
+        mBufferCanvas = Canvas(mBufferBitmap!!)
+        mDisplayBitmap = Bitmap.createBitmap(
+            GlobalConfig.SCREEN_WIDTH,
+            GlobalConfig.SCREEN_HEIGHT,
+            Bitmap.Config.ARGB_8888
+        )
+        mDisplayCanvas = Canvas(mDisplayBitmap!!)
+
+        // Establecer el fondo predeterminado en el nuevo búfer de dibujo
+        GlobalConfig.backgroundBitmap = Bitmap.createBitmap(
+            GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT, Bitmap.Config.ARGB_8888
         ).apply {
             val canvas = Canvas(this)
             canvas.drawColor(GlobalConfig.defaultBackgroundColor)
         }
-        mStrokesBitmap?.recycle()
-        mStrokesCanvas = null
+
+        // Restaurar otras variables y listas
         GlobalConfig.backgroundWallpaper = null
         GlobalConfig.backgroundColor = null
         myLines = mutableListOf()
         myUndoLines = mutableListOf()
         myLinesHistory = mutableListOf()
-        clearToRender()
+
+        render()
     }
 
+    private fun clearToRender() {
+        // Crear un nuevo búfer de dibujo y visualización con el mismo tamaño
+        mBufferBitmap = Bitmap.createBitmap(
+            GlobalConfig.SCREEN_WIDTH,
+            GlobalConfig.SCREEN_HEIGHT,
+            Bitmap.Config.ARGB_8888
+        )
+        mBufferCanvas = Canvas(mBufferBitmap!!)
+        mDisplayBitmap = Bitmap.createBitmap(
+            GlobalConfig.SCREEN_WIDTH,
+            GlobalConfig.SCREEN_HEIGHT,
+            Bitmap.Config.ARGB_8888
+        )
+        mDisplayCanvas = Canvas(mDisplayBitmap!!)
 
-    private fun clearToRender(){
-        resize(GlobalConfig.SCREEN_WIDTH, GlobalConfig.SCREEN_HEIGHT)
+        // Llamar a render() para actualizar la interfaz de usuario con el nuevo búfer de visualización
         render()
     }
 

@@ -273,7 +273,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:visibility="gone" />
 
-    <com.orbys.demowhiteboard.ui.youtube.VideoOverlayView
+    <com.orbys.demowhiteboard.ui.view.OverlayView
         android:id="@+id/videoOverlayView"
         android:layout_width="0dp"
         android:layout_height="0dp"

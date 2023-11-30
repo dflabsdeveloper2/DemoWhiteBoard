@@ -304,7 +304,7 @@ class MainActivity : AppCompatActivity() {
             GlobalConfig.currentPage = totalPages
 
             binding.videoOverlayView.apply {
-                clearListYoutube()
+                //clearListYoutube()
                 Log.d("VIDEO", "list video total size: ${GlobalConfig.listYoutube.size}")
             }
             modeSelected = false
@@ -342,11 +342,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 binding.videoOverlayView.apply {
-                    clearListYoutube()
+                    //clearListYoutube()
                     Log.d("VIDEO", "current page -> ${GlobalConfig.currentPage}")
                     Log.d("VIDEO", "list video total size: ${GlobalConfig.listYoutube.size}")
                     Log.d("VIDEO", "list video page size: ${GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage }.size}")
-                    addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
+                    //addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
                 }
 
                 modeSelected = false
@@ -386,11 +386,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 binding.videoOverlayView.apply {
-                    clearListYoutube()
+                    //clearListYoutube()
                     Log.d("VIDEO", "current page -> ${GlobalConfig.currentPage}")
                     Log.d("VIDEO", "list video total size: ${GlobalConfig.listYoutube.size}")
                     Log.d("VIDEO", "list video page size: ${GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage }.size}")
-                    addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
+                    //addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
                 }
 
                 modeSelected = false
@@ -424,6 +424,7 @@ class MainActivity : AppCompatActivity() {
                     val listImagesSizeInCurrentPage = listImages.filter { it.page == GlobalConfig.currentPage }.size
 
                     if (listImagesSizeInCurrentPage < GlobalConfig.numMaxImagesPage) {
+
                         lifecycleScope.launch(Dispatchers.IO) {
                             val loader = ImageLoader(this@MainActivity)
                             val request = ImageRequest.Builder(this@MainActivity)
@@ -449,7 +450,12 @@ class MainActivity : AppCompatActivity() {
                             )
 
                             withContext(Dispatchers.Main) {
-                                binding.whiteboard.apply {
+                               /* binding.videoOverlayView.addImageFloatingFirst(ImageBitmap(
+                                    bitmap,
+                                    GlobalConfig.currentPage
+                                ))*/
+
+                            binding.whiteboard.apply {
                                     addImage(
                                         ImageBitmap(
                                             bitmap,
@@ -515,7 +521,7 @@ class MainActivity : AppCompatActivity() {
                         GlobalConfig.listYoutube.add(video)
                         Log.d("VIDEO", "add video page: ${video.page}")
                         try {
-                            binding.videoOverlayView.addYouTubePlayer(video)
+                            //binding.videoOverlayView.addYouTubePlayer(video)
                         } catch (e: Exception) {
                             Log.d("YOUTUBE", "Error inicializar $e")
                         }
@@ -727,8 +733,8 @@ class MainActivity : AppCompatActivity() {
 
                                 try {
                                     binding.videoOverlayView.apply {
-                                        clearListYoutube()
-                                        addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
+                                        //clearListYoutube()
+                                        //addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
                                     }
                                 } catch (e: Exception) {
                                     Log.d("YOUTUBE", "Error inicializar $e")
@@ -857,7 +863,7 @@ class MainActivity : AppCompatActivity() {
         myWhiteboard = MyWhiteboard(lines = mutableListOf())
         listImages = mutableListOf()
         binding.llMenu.isVisible = false
-        binding.videoOverlayView.clearListYoutube()
+        //binding.videoOverlayView.clearListYoutube()
         modeSelected = false
         binding.btnSelect.setBackgroundColor(getColor(R.color.white))
     }
