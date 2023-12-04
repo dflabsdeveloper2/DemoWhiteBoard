@@ -4,11 +4,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.AttributeSet
 import android.util.Log
-import android.view.Gravity
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import android.widget.ImageView
-import androidx.constraintlayout.widget.ConstraintLayout
 import com.orbys.demowhiteboard.R
 import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.domain.DrawFunctions
@@ -21,9 +19,9 @@ import com.orbys.demowhiteboard.ui.whiteboard.WriteBoard
 class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
 
     private var isMoveModeEnabled = false
-    private val marginThreshold = 10
+    private val marginThreshold = 10f
     private var selectedImage: ImageDataView? = null
-    var imageView: ViewImage? = null
+    private var imageView: ViewImage? = null
     private var lastX = 0f
     private var lastY = 0f
     private var rotateImage = 0f
@@ -46,7 +44,6 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
         if (selectedImage != null) return
 
         val layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-        layoutParams.gravity = Gravity.CENTER // Modifica según tus necesidades
 
         imageView = ViewImage(context)
 
@@ -134,10 +131,10 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
                     list.lines[index].listLines.toMutableList().removeAt(myLinesIndex)
 
                     val newImage = selectedImage?.image?.apply {
-                        this.x = lastX
-                        this.y = lastY
                         this.rotation = rotateImage
                     }
+
+                    Log.d("OVERLAYVIEW","new Image -> $newImage")
 
                     list.lines.add(
                         MyLines(
@@ -203,90 +200,6 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
         selectedImage = null
     }
 
-    /* fun addImageFloatingFirst(imageBitmap: ImageBitmap) {
-         isFirst = true
-
-         val layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-         layoutParams.gravity = Gravity.CENTER // Modifica según tus necesidades
-
-         val imageView = ViewImage(context)
-         // Agregar imageView a la vista OverlayView
-         addView(imageView, layoutParams)
-
-         selectedImage = ImageDataView(
-             imageView,
-             ImageBitmapData(
-                 imageBitmap.image,
-                 (width / 2).toFloat(),
-                 (height / 2).toFloat(),
-                 imageBitmap.image.width.toFloat(),
-                 imageBitmap.image.height.toFloat()
-             )
-         )
-
-         // Configurar la imagen en el imageView
-         val mainImage = imageView.findViewById<ImageView>(R.id.ivMainImage)
-         mainImage.setImageBitmap(resizeImage(imageBitmap.image))
-
-         val btnClose = imageView.findViewById<ImageView>(R.id.ivCloseMainImage)
-         val btnOk = imageView.findViewById<ImageView>(R.id.ivOkMainImage)
-
-         val btnRotation = imageView.findViewById<ImageView>(R.id.ivItemRotationMainImagen)
-
-         var lastRotationX = 0f
-         var lastRotationY = 0f
-
-         btnRotation.setOnTouchListener { view, motionEvent ->
-             if (isMoveModeEnabled) { // Asegurarse de que el modo de movimiento está habilitado
-                 val centerX = mainImage.width / 2f
-                 val centerY = mainImage.height / 2f
-
-                 when (motionEvent.actionMasked) {
-                     MotionEvent.ACTION_DOWN -> {
-                         lastRotationY = motionEvent.x
-                         lastRotationX = motionEvent.y
-                     }
-
-                     MotionEvent.ACTION_MOVE -> {
-                         val deltaX = motionEvent.x - lastRotationY
-
-                         val rotationAngle = when {
-                             deltaX > 0 -> 5f // Rotar hacia la derecha
-                             deltaX < 0 -> -5f // Rotar hacia la izquierda
-                             else -> 0f // No se realiza rotación si no hay movimiento horizontal
-                         }
-
-                         mainImage.pivotX = centerX
-                         mainImage.pivotY = centerY
-
-                         imageView.rotation += rotationAngle
-
-                         lastRotationX = motionEvent.x
-                         lastRotationY = motionEvent.y
-                     }
-                 }
-                 return@setOnTouchListener true
-             }
-             return@setOnTouchListener false // Si no está en modo de movimiento, no manejar el evento
-         }
-
-         btnClose.setOnClickListener {
-             if (isMoveModeEnabled) {
-                 //TODO: quityar de la lista de imagenes a pintar
-                 removeView(imageView)
-                 selectedImage = null
-             }
-         }
-
-         btnOk.setOnClickListener {
-             if (isMoveModeEnabled) {
-                 //TODO: guardar estado en el que esta (x e y, rotacion) para pintarlo
-                 removeView(imageView)
-                 selectedImage = null
-             }
-         }
-     }*/
-
     //TODO:REVISAR si es necesario
     /* override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
          return isMoveModeEnabled
@@ -324,7 +237,7 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
                     Log.d("OVERLAYVIEW", "ACTION_MOVE")
                     selectedImage?.let { imagen ->
                         if (event.pointerCount > 1) {
-                            Log.d("OVERLAYVIEW", "escalar")
+                            Log.d("OVERLAYVIEW", "escalar -> $selectedImage")
                             val newScale = imagen.image.let {
                                 DrawFunctions.scaleImage(
                                     it.x,
@@ -336,19 +249,21 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
                                     300f
                                 )
                             }
+
+                            Log.d("OVERLAYVIEW", "newScale: $newScale")
                             newScale?.let {
                                 imagen.image.x = it.x
                                 imagen.image.y = it.y
                                 imagen.image.width = it.width
                                 imagen.image.height = it.height
 
-                                val layoutParams =
-                                    imagen.view.layoutParams as ConstraintLayout.LayoutParams
-                                layoutParams.width = imagen.view.width
-                                layoutParams.height = imagen.view.height
-                                layoutParams.leftMargin = imagen.view.x.toInt()
-                                layoutParams.topMargin = imagen.view.y.toInt()
-                                imagen.view.layoutParams = layoutParams
+                                val layoutParams = imagen.view.ivMainImage.layoutParams
+                                layoutParams.width = it.width.toInt()
+                                layoutParams.height = it.height.toInt()
+                                imagen.view.ivMainImage.layoutParams = layoutParams
+
+                                // Si necesitas escalar la imagen dentro del ImageView
+                                imagen.view.ivMainImage.scaleType = ImageView.ScaleType.CENTER_CROP
                             }
                         } else {
 
@@ -404,54 +319,65 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
     }
 
     private fun resizeImage(originalBitmap: Bitmap): Bitmap {
-        val maxWidthDp = 300 // Ancho máximo en dp
-        val maxHeightDp = 300 // Altura máxima en dp
+        val maxDimension = 1200f // Máximo ancho y alto en píxeles
 
-        val density = resources.displayMetrics.density
-        val maxWidthPx = (maxWidthDp * density + 0.5f).toInt() // Ancho máximo en píxeles
-        val maxHeightPx = (maxHeightDp * density + 0.5f).toInt() // Altura máxima en píxeles
+        val screenWidth = GlobalConfig.SCREEN_WIDTH
+        val screenHeight = GlobalConfig.SCREEN_HEIGHT
 
-        val bitmapWidth = originalBitmap.width
-        val bitmapHeight = originalBitmap.height
+        val bitmapWidth = originalBitmap.width.toFloat()
+        val bitmapHeight = originalBitmap.height.toFloat()
 
-        val ratio = bitmapHeight.toFloat() / bitmapWidth.toFloat()
+        val ratio = bitmapHeight / bitmapWidth
 
-        val newWidth = if (bitmapWidth > maxWidthPx || bitmapHeight > maxHeightPx) {
+        var newWidth: Float
+        var newHeight: Float
+
+        if (bitmapWidth > maxDimension || bitmapHeight > maxDimension) {
             if (bitmapWidth > bitmapHeight) {
-                maxWidthPx
+                newWidth = maxDimension
+                newHeight = maxDimension * ratio
             } else {
-                (maxHeightPx / ratio).toInt()
+                newHeight = maxDimension
+                newWidth = maxDimension / ratio
             }
         } else {
-            bitmapWidth
+            newWidth = bitmapWidth
+            newHeight = bitmapHeight
         }
 
-        val newHeight = if (bitmapHeight > maxHeightPx || bitmapWidth > maxWidthPx) {
-            if (bitmapHeight > bitmapWidth) {
-                maxHeightPx
+        // Verifica si las dimensiones escaladas exceden las dimensiones de la pantalla
+        if (newWidth > screenWidth || newHeight > screenHeight) {
+            val ratioScreen = screenHeight / screenWidth
+
+            if (newWidth > newHeight) {
+                newWidth = screenWidth.toFloat()
+                newHeight = screenWidth * ratio
             } else {
-                (maxWidthPx * ratio).toInt()
+                newHeight = screenHeight.toFloat()
+                newWidth = screenHeight / ratio
             }
-        } else {
-            bitmapHeight
         }
 
-        return Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+        return Bitmap.createScaledBitmap(
+            originalBitmap,
+            newWidth.toInt(),
+            newHeight.toInt(),
+            true
+        )
     }
 
     private fun moveImage(imagenView: ImageDataView, newX: Float, newY: Float) {
-        val maxX = width / 2 - imagenView.image.width - marginThreshold
-        val maxY =
-            height / 2 - 300 - imagenView.image.height - marginThreshold //TODO: revisar si el height es toda la pantalla
-        val limitedX = newX.coerceIn(-width / 2 + marginThreshold.toFloat(), maxX)
-        val limitedY = newY.coerceIn(-height / 2 + marginThreshold.toFloat(), maxY)
+        val adjustedX =
+            newX.coerceIn(marginThreshold, width - imagenView.view.width - marginThreshold)
+        val adjustedY =
+            newY.coerceIn(marginThreshold, height - imagenView.view.height - marginThreshold)
 
-        imagenView.image.x = limitedX
-        imagenView.image.y = limitedY
+        imagenView.image.x = adjustedX
+        imagenView.image.y = adjustedY
 
         val layoutParams = imagenView.view.layoutParams as LayoutParams
-        layoutParams.leftMargin = limitedX.toInt()
-        layoutParams.topMargin = limitedY.toInt()
+        layoutParams.leftMargin = adjustedX.toInt()
+        layoutParams.topMargin = adjustedY.toInt()
         imagenView.view.layoutParams = layoutParams
     }
 }

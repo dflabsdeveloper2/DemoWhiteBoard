@@ -3,6 +3,7 @@ package com.orbys.demowhiteboard.ui.whiteboard
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -115,16 +116,17 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                             }
                         } else {
                             if (line.imageBitmap != null) {
-                                val result =
-                                    DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
-                                result?.let { image ->
-                                    mDisplayCanvas?.drawBitmap(
-                                        image.bitmap,
-                                        null,
-                                        image.rectF,
-                                        null
-                                    )
-                                }
+                                val bitmap = line.imageBitmap!!.image
+                                val matrix = Matrix()
+                                matrix.postTranslate(line.imageBitmap!!.x, line.imageBitmap!!.y)
+                                matrix.postRotate(
+                                    line.imageBitmap!!.rotation)
+
+                                mDisplayCanvas?.drawBitmap(
+                                    bitmap,
+                                    matrix,
+                                    null
+                                )
                             }
                         }
                     }
@@ -161,16 +163,17 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                             }
                         } else {
                             if (line.imageBitmap != null) {
-                                val result =
-                                    DrawFunctions.scaleRotateTranslateBitmap(line.imageBitmap!!)
-                                result?.let { image ->
-                                    mDisplayCanvas?.drawBitmap(
-                                        image.bitmap,
-                                        null,
-                                        image.rectF,
-                                        null
-                                    )
-                                }
+                                val bitmap = line.imageBitmap!!.image
+                                val matrix = Matrix()
+                                matrix.postTranslate(line.imageBitmap!!.x, line.imageBitmap!!.y)
+                                matrix.postRotate(
+                                    line.imageBitmap!!.rotation)
+
+                                mDisplayCanvas?.drawBitmap(
+                                    bitmap,
+                                    matrix,
+                                    null
+                                )
                             }
                         }
                     }
@@ -246,22 +249,17 @@ class WriteBoardController(private val context:Context, private val callBack: ()
                         }
                     } else {
                         if (it.imageBitmap != null) {
-                            Log.d("IMAGE", "image bitmap-> ${it.imageBitmap}")
-                            val result = DrawFunctions.scaleRotateTranslateBitmap(it.imageBitmap!!)
-                            Log.d("IMAGE", "result rotation ${result.rectF}")
-                            result.let { image ->
-                                try {
-                                    offscreenCanvas.drawBitmap(
-                                        image.bitmap,
-                                        null,
-                                        image.rectF,
-                                        null
-                                    )
-                                } catch (e: Exception) {
-                                    Log.d("IMAGE", "exception paint image -> $e")
-                                }
-                            }
+                            val bitmap = it.imageBitmap!!.image
+                            val matrix = Matrix()
+                            matrix.postTranslate(it.imageBitmap!!.x, it.imageBitmap!!.y)
+                            matrix.postRotate(
+                                it.imageBitmap!!.rotation)
 
+                            offscreenCanvas.drawBitmap(
+                                bitmap,
+                                matrix,
+                                null
+                            )
                         }
                     }
                 }

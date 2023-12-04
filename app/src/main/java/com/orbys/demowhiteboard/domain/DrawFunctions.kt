@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.PointF
 import android.graphics.RectF
-import android.util.Log
 import android.view.MotionEvent
 import com.orbys.demowhiteboard.core.GlobalConfig
 import com.orbys.demowhiteboard.domain.model.ImageBitmap
@@ -145,44 +144,17 @@ object DrawFunctions {
     }
 
     fun scaleRotateTranslateBitmap(myImage: ImageBitmapData): ImageTransformResult {
-        // Crear una matriz para la rotación
-        val rotationMatrix = Matrix()
-        rotationMatrix.postRotate(myImage.rotation)
+        val matrix = Matrix()
+        matrix.postRotate(myImage.rotation)
 
-        Log.d("IMAGE", "rotation matrix ${myImage.rotation}")
+        // Rotar el bitmap
+        val bitmapRotado = Bitmap.createBitmap(myImage.image, 0, 0, myImage.image.width, myImage.image.height, matrix, true)
 
-        // Escalar el bitmap al tamaño deseado
-        val scaledWidth = myImage.width
-        val scaledHeight = myImage.height
+        // Calcular las coordenadas del RectF después de la rotación
+        val rectF = RectF(myImage.x, myImage.y, myImage.x + bitmapRotado.width, myImage.y + bitmapRotado.height)
+        matrix.mapRect(rectF)
 
-        // Aplicar la traslación
-        val translationMatrix = Matrix()
-        translationMatrix.postTranslate(myImage.x, myImage.y)
-
-        // Combina las matrices de rotación y escala
-        val combinedMatrix = Matrix()
-        combinedMatrix.setConcat(rotationMatrix, translationMatrix)
-
-        // Crear un bitmap rotado, escalado y trasladado
-        val transformedBitmap = Bitmap.createBitmap(
-            myImage.image,
-            0,
-            0,
-            myImage.image.width,
-            myImage.image.height,
-            combinedMatrix,
-            true
-        )
-
-        // Calcular el RectF después de las transformaciones
-        val rectF = RectF(
-            myImage.x,
-            myImage.y,
-            myImage.x + scaledWidth,
-            myImage.y + scaledHeight
-        )
-
-        return ImageTransformResult(transformedBitmap, rectF)
+        return ImageTransformResult(bitmapRotado, rectF)
     }
 
     fun rotateLines(lines: List<MyLines>, angleDegrees: Float, range: RectF): List<MyLines> {
