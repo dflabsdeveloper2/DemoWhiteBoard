@@ -3,7 +3,7 @@ package com.orbys.demowhiteboard.domain.model
 import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.RectF
-import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
+import com.orbys.demowhiteboard.ui.view.YoutubeVideo
 
 
 data class MyWhiteboard(var lines: MutableList<MyLines>) {

@@ -1,10 +1,14 @@
 package com.orbys.demowhiteboard.ui.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
+import android.view.Gravity
 import android.view.MotionEvent
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.orbys.demowhiteboard.R
@@ -14,7 +18,12 @@ import com.orbys.demowhiteboard.domain.model.ImageBitmapData
 import com.orbys.demowhiteboard.domain.model.MyLine
 import com.orbys.demowhiteboard.domain.model.MyLines
 import com.orbys.demowhiteboard.ui.MainActivity
+import com.orbys.demowhiteboard.ui.core.Helper
 import com.orbys.demowhiteboard.ui.whiteboard.WriteBoard
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 
 class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
 
@@ -22,10 +31,15 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
     private val marginThreshold = 10f
     private var selectedImage: ImageDataView? = null
     private var imageView: ViewImage? = null
+    private var youtubeView: ViewYoutube? = null
+    private var selectedYoutube: YoutubeVideo? = null
+    private val youtubeVideos: MutableList<YoutubeVideo> = mutableListOf()
     private var lastX = 0f
     private var lastY = 0f
     private var rotateImage = 0f
     private val mainActivityContext: MainActivity? = context as? MainActivity
+
+    //TODO: Falta eliminar imagen de la lista en main activity
 
     fun setMovementMode() {
         isMoveModeEnabled = true
@@ -36,9 +50,50 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
         imageView?.let {
             removeView(it)
         }
+
+        youtubeView?.let {
+            removeAllViews()
+        }
+
         selectedImage = null
+        selectedYoutube = null
     }
 
+    fun getYouTubeVideos(): List<YoutubeVideo> {
+        return youtubeVideos.toList()
+    }
+
+    fun addYouTubePlayer(origin: YoutubeVideo) {
+        if (youtubeVideos.size < GlobalConfig.numMaxYoutubePage) {
+            val youTubePlayerView = initializeYouTubePlayerView(context, origin.id)
+
+            Log.d("YOUTUBE", "add youtube")
+            val video = origin.apply { viewer = youTubePlayerView }
+
+            youtubeVideos.add(video)
+            val layoutParams = LayoutParams(video.width, LayoutParams.WRAP_CONTENT)
+            layoutParams.leftMargin = x.toInt()
+            layoutParams.topMargin = y.toInt()
+            addView(youTubePlayerView, layoutParams)
+
+            // Añade el icono de borrar al YouTubePlayerView con los márgenes y tamaño deseados
+            val deleteImageView = ImageView(context)
+            deleteImageView.setImageResource(android.R.drawable.ic_delete)
+
+            val deleteLayoutParams =
+                LayoutParams(Helper.dpToPx(20, context), Helper.dpToPx(20, context))
+            deleteLayoutParams.gravity =
+                Gravity.END or Gravity.TOP  // Posiciona en la esquina superior derecha
+
+            youTubePlayerView.addView(deleteImageView, deleteLayoutParams)
+            deleteImageView.setOnClickListener {
+                Log.d("ICONO", "borrar")
+                removeYouTubePlayer(video)
+            }
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
     private fun addImageFloating(imageBitmap: ImageBitmapData) {
 
         if (selectedImage != null) return
@@ -106,6 +161,172 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
                 setNewPositionImage()
             }
         }
+    }
+
+    //TODO:REVISAR si es necesario
+     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        Log.d("OVERLAYVIEW","isModeMove: $isMoveModeEnabled youtube: ${selectedYoutube==null} image:${selectedImage == null}")
+         return isMoveModeEnabled && selectedImage == null
+     }
+
+    private var initialFingerSpacing = 1f
+    private var initialScaleX = 1f
+    private var initialScaleY = 1f
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (isMoveModeEnabled) {
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    lastX = event.x
+                    lastY = event.y
+                    val selectImageBitmap = findSelectedImage(event.x, event.y)
+                    initialFingerSpacing = DrawFunctions.getFingerSpacing(event)
+                    selectedYoutube = findSelectedVideo(event.x, event.y)
+                    Log.d(
+                        "OVERLAYVIEW",
+                        "selectedYoutube -> $selectedYoutube"
+                    )
+                    if (selectImageBitmap != null || selectedYoutube!=null) {
+                        if (selectedImage == null) {
+                            Log.d("OVERLAYVIEW", "segunda")
+                            if (selectImageBitmap != null) {
+                                addImageFloating(selectImageBitmap)
+                            }
+                        }
+                    } else {
+                        if (selectedImage == null) {
+                            Log.d("OVERLAYVIEW", "no encontrada imagen y video")
+                            return super.onTouchEvent(event)
+                        }
+                    }
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    Log.d("OVERLAYVIEW", "ACTION_MOVE")
+                    selectedImage?.let { imagen ->
+                        if (event.pointerCount > 1) {
+                            Log.d("OVERLAYVIEW", "escalar -> $selectedImage")
+                            val newScale = imagen.image.let {
+                                DrawFunctions.scaleImage(
+                                    it.x,
+                                    it.y,
+                                    it.width,
+                                    it.height,
+                                    event,
+                                    initialFingerSpacing,
+                                    300f
+                                )
+                            }
+
+                            Log.d("OVERLAYVIEW", "newScale: $newScale")
+                            newScale?.let {
+                                imagen.image.x = it.x
+                                imagen.image.y = it.y
+                                imagen.image.width = it.width
+                                imagen.image.height = it.height
+
+                                val layoutParams = imagen.view.ivMainImage.layoutParams
+                                layoutParams.width = it.width.toInt()
+                                layoutParams.height = it.height.toInt()
+                                imagen.view.ivMainImage.layoutParams = layoutParams
+
+                                // Si necesitas escalar la imagen dentro del ImageView
+                                imagen.view.ivMainImage.scaleType = ImageView.ScaleType.CENTER_CROP
+                            }
+                        } else {
+
+                            val deltaX = event.x - lastX
+                            val deltaY = event.y - lastY
+
+                            val newX = imagen.image.x + deltaX
+                            val newY = imagen.image.y + deltaY
+                            Log.d("OVERLAYVIEW", "mover $newX $newY  width $width  height $height")
+                            moveImage(imagen, newX, newY)
+
+                            lastX = event.x
+                            lastY = event.y
+                        }
+                    }
+
+                    selectedYoutube?.let { video ->
+                        Log.d("OVERLAYVIEW", "video")
+                        if (event.pointerCount > 1) {
+                            val newScale = DrawFunctions.scaleImage(
+                                video.x,
+                                video.y,
+                                video.width.toFloat(),
+                                video.height.toFloat(),
+                                event,
+                                initialFingerSpacing,
+                                300f
+                            )
+                            newScale?.let {
+                                video.x = it.x
+                                video.y = it.y
+                                video.width = it.width.toInt()
+                                video.height = it.height.toInt()
+
+                                val layoutParams = video.viewer?.layoutParams as LayoutParams
+                                layoutParams.width = video.width
+                                layoutParams.height = video.height
+                                layoutParams.leftMargin = video.x.toInt()
+                                layoutParams.topMargin = video.y.toInt()
+                                video.viewer?.layoutParams = layoutParams
+
+                            }
+                        } else {
+                            selectedYoutube?.let { video ->
+                                Log.d("OVERLAYVIEW", "move video")
+
+                                val deltaX = event.x - lastX
+                                val deltaY = event.y - lastY
+
+                                val newX = video.x + deltaX
+                                val newY = video.y + deltaY
+
+                                moveYouTubePlayer(video, newX, newY)
+
+                                lastX = event.x
+                                lastY = event.y
+                            }
+                        }
+                    }
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    initialFingerSpacing = 1f
+                    initialScaleX = 1f
+                    initialScaleY = 1f
+                    selectedYoutube = null
+                }
+            }
+
+            return true
+        }
+        return super.onTouchEvent(event)
+    }
+
+    private fun findSelectedImage(x: Float, y: Float): ImageBitmapData? {
+        val listImages = GlobalConfig.listMyWhiteBoard?.getAllImageBitmap()
+        if (listImages?.isNotEmpty() == true) {
+            listImages.forEach {
+                Log.d("OVERLAYVIEW", "lista imagenes: ${it.image}")
+                if (isPointInsideImageBitmapData(x, y, it)) {
+                    return it
+                }
+            }
+        }
+
+        return null
+    }
+
+    private fun findSelectedVideo(x: Float, y: Float): YoutubeVideo? {
+        for (video in youtubeVideos) {
+            if (video.viewer?.let { isViewContains(it, x, y) } == true) {
+                return video
+            }
+        }
+        return null
     }
 
     private fun setNewPositionImage() {
@@ -200,113 +421,6 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
         selectedImage = null
     }
 
-    //TODO:REVISAR si es necesario
-    /* override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-         return isMoveModeEnabled
-     }*/
-
-    private var initialFingerSpacing = 1f
-    private var initialScaleX = 1f
-    private var initialScaleY = 1f
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        Log.d("OVERLAYVIEW", "touch")
-        if (isMoveModeEnabled) {
-            Log.d("OVERLAYVIEW", "touch is movemode")
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    lastX = event.x
-                    lastY = event.y
-                    val selectImageBitmap = findSelectedImage(event.x, event.y)
-                    initialFingerSpacing = DrawFunctions.getFingerSpacing(event)
-
-                    if (selectImageBitmap != null) {
-                        if (selectedImage == null) {
-                            Log.d("OVERLAYVIEW", "segunda")
-                            addImageFloating(selectImageBitmap)
-                        }
-                    } else {
-                        if (selectedImage == null) {
-                            Log.d("OVERLAYVIEW", "no encontrada imagen")
-                            return super.onTouchEvent(event)
-                        }
-                    }
-                }
-
-                MotionEvent.ACTION_MOVE -> {
-                    Log.d("OVERLAYVIEW", "ACTION_MOVE")
-                    selectedImage?.let { imagen ->
-                        if (event.pointerCount > 1) {
-                            Log.d("OVERLAYVIEW", "escalar -> $selectedImage")
-                            val newScale = imagen.image.let {
-                                DrawFunctions.scaleImage(
-                                    it.x,
-                                    it.y,
-                                    it.width,
-                                    it.height,
-                                    event,
-                                    initialFingerSpacing,
-                                    300f
-                                )
-                            }
-
-                            Log.d("OVERLAYVIEW", "newScale: $newScale")
-                            newScale?.let {
-                                imagen.image.x = it.x
-                                imagen.image.y = it.y
-                                imagen.image.width = it.width
-                                imagen.image.height = it.height
-
-                                val layoutParams = imagen.view.ivMainImage.layoutParams
-                                layoutParams.width = it.width.toInt()
-                                layoutParams.height = it.height.toInt()
-                                imagen.view.ivMainImage.layoutParams = layoutParams
-
-                                // Si necesitas escalar la imagen dentro del ImageView
-                                imagen.view.ivMainImage.scaleType = ImageView.ScaleType.CENTER_CROP
-                            }
-                        } else {
-
-                            val deltaX = event.x - lastX
-                            val deltaY = event.y - lastY
-
-                            val newX = imagen.image.x + deltaX
-                            val newY = imagen.image.y + deltaY
-                            Log.d("OVERLAYVIEW", "mover $newX $newY  width $width  height $height")
-                            moveImage(imagen, newX, newY)
-
-                            lastX = event.x
-                            lastY = event.y
-                        }
-                    }
-                }
-
-                MotionEvent.ACTION_UP -> {
-                    initialFingerSpacing = 1f
-                    initialScaleX = 1f
-                    initialScaleY = 1f
-                }
-            }
-
-            return true
-        }
-        return super.onTouchEvent(event)
-    }
-
-    private fun findSelectedImage(x: Float, y: Float): ImageBitmapData? {
-        val listImages = GlobalConfig.listMyWhiteBoard?.getAllImageBitmap()
-        if (listImages?.isNotEmpty() == true) {
-            listImages.forEach {
-                Log.d("OVERLAYVIEW", "lista imagenes: ${it.image}")
-                if (isPointInsideImageBitmapData(x, y, it)) {
-                    return it
-                }
-            }
-        }
-
-        return null
-    }
-
     private fun isPointInsideImageBitmapData(
         pointX: Float,
         pointY: Float,
@@ -380,6 +494,115 @@ class OverlayView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
         layoutParams.topMargin = adjustedY.toInt()
         imagenView.view.layoutParams = layoutParams
     }
+
+
+    fun addListYouTubeVideos(videoList: List<YoutubeVideo>) {
+        youtubeVideos.clear()
+        if (videoList.size < GlobalConfig.numMaxYoutubePage) {
+            for (video in videoList) {
+                if (video.viewer == null) {
+                    video.viewer = initializeYouTubePlayerView(context, video.id)
+                }
+
+                // Añade el video al FrameLayout
+                val layoutParams = LayoutParams(video.width, video.height)
+                layoutParams.leftMargin = video.x.toInt()
+                layoutParams.topMargin = video.y.toInt()
+                video.viewer?.let {
+                    it.layoutParams = layoutParams
+                    it.rotation = video.rotation
+                    it.scaleX = video.scaleX.coerceIn(1f, 3f)
+                    it.scaleY = video.scaleY.coerceIn(1f, 3f)
+
+                    addView(it)
+                }
+
+                youtubeVideos.add(video)
+            }
+        }
+    }
+
+    private fun moveYouTubePlayer(video: YoutubeVideo, newX: Float, newY: Float) {
+        val maxX = width - video.width - marginThreshold
+        val maxY =
+            height - 300 - video.height - marginThreshold //TODO: revisar si el height es toda la pantalla
+        val limitedX = newX.coerceIn(marginThreshold.toFloat(), maxX.toFloat())
+        val limitedY = newY.coerceIn(marginThreshold.toFloat(), maxY.toFloat())
+
+        video.x = limitedX
+        video.y = limitedY
+
+        val layoutParams = video.viewer?.layoutParams as LayoutParams
+        layoutParams.leftMargin = limitedX.toInt()
+        layoutParams.topMargin = limitedY.toInt()
+        video.viewer?.layoutParams = layoutParams
+    }
+
+    private fun removeYouTubePlayer(video: YoutubeVideo) {
+        removeView(video.viewer)
+        youtubeVideos.remove(video)
+        selectedYoutube = null
+
+        invalidate()
+    }
+
+    fun clearListYoutube() {
+        youtubeVideos.clear()
+        removeAllViews()
+        selectedYoutube = null
+        setDrawingMode()
+    }
+
+    private fun isViewContains(view: View, x: Float, y: Float): Boolean {
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+
+        // Ajusta las coordenadas de los puntos táctiles de acuerdo con el escalado
+        val scaledX = x / view.scaleX
+        val scaledY = y / view.scaleY
+
+        val rect = Rect(
+            location[0],
+            location[1],
+            (location[0] + view.width * view.scaleX).toInt(),
+            (location[1] + view.height * view.scaleY).toInt()
+        )
+        return rect.contains(scaledX.toInt(), scaledY.toInt())
+    }
+
+    private fun initializeYouTubePlayerView(context: Context, videoId: String): YouTubePlayerView {
+        val playerView = YouTubePlayerView(context)
+        playerView.enableAutomaticInitialization = false
+        val listenner = object : AbstractYouTubePlayerListener() {
+            override fun onReady(youTubePlayer: YouTubePlayer) {
+                /* val defaultPlayerUiController =
+                     DefaultPlayerUiController(playerView, youTubePlayer)
+                 playerView.setCustomPlayerUi(defaultPlayerUiController.rootView)*/
+
+                youTubePlayer.cueVideo(videoId, 0f)
+            }
+        }
+        val options: IFramePlayerOptions =
+            IFramePlayerOptions.Builder().controls(1).build()
+
+        playerView.initialize(listenner, options)
+
+        return playerView
+    }
+
 }
 
 data class ImageDataView(val view: ViewImage, var image: ImageBitmapData)
+
+data class YoutubeVideo(
+    val id: String,
+    var viewer: YouTubePlayerView?,
+    var x: Float,
+    var y: Float,
+    var width: Int,
+    var height: Int,
+    var rotation: Float,
+    var scaleX: Float,
+    var scaleY: Float,
+    var page: Int
+)

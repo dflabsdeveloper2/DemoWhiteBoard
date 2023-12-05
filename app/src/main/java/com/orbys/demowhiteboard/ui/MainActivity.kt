@@ -37,7 +37,7 @@ import com.orbys.demowhiteboard.ui.dialog.DialogPropsPen
 import com.orbys.demowhiteboard.ui.dialog.DialogQR
 import com.orbys.demowhiteboard.ui.fragment.GoogleImagesFragment
 import com.orbys.demowhiteboard.ui.fragment.YoutubeFragment
-import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
+import com.orbys.demowhiteboard.ui.view.YoutubeVideo
 import com.skg.drawaccelerate.AccelerateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -138,9 +138,9 @@ class MainActivity : AppCompatActivity() {
 
             if (modeSelected) {
                 it.setBackgroundColor(getColor(R.color.red))
-                binding.videoOverlayView.setMovementMode()
+                binding.overlayView.setMovementMode()
             } else {
-                binding.videoOverlayView.setDrawingMode()
+                binding.overlayView.setDrawingMode()
                 it.setBackgroundColor(getColor(R.color.white))
             }
 
@@ -303,7 +303,7 @@ class MainActivity : AppCompatActivity() {
 
             GlobalConfig.currentPage = totalPages
 
-            binding.videoOverlayView.apply {
+            binding.overlayView.apply {
                 //clearListYoutube()
                 Log.d("VIDEO", "list video total size: ${GlobalConfig.listYoutube.size}")
             }
@@ -341,12 +341,12 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                binding.videoOverlayView.apply {
+                binding.overlayView.apply {
                     //clearListYoutube()
                     Log.d("VIDEO", "current page -> ${GlobalConfig.currentPage}")
                     Log.d("VIDEO", "list video total size: ${GlobalConfig.listYoutube.size}")
                     Log.d("VIDEO", "list video page size: ${GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage }.size}")
-                    //addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
+                    addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
                 }
 
                 modeSelected = false
@@ -385,12 +385,12 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                binding.videoOverlayView.apply {
+                binding.overlayView.apply {
                     //clearListYoutube()
                     Log.d("VIDEO", "current page -> ${GlobalConfig.currentPage}")
                     Log.d("VIDEO", "list video total size: ${GlobalConfig.listYoutube.size}")
                     Log.d("VIDEO", "list video page size: ${GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage }.size}")
-                    //addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
+                    addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
                 }
 
                 modeSelected = false
@@ -521,7 +521,7 @@ class MainActivity : AppCompatActivity() {
                         GlobalConfig.listYoutube.add(video)
                         Log.d("VIDEO", "add video page: ${video.page}")
                         try {
-                            //binding.videoOverlayView.addYouTubePlayer(video)
+                            binding.overlayView.addYouTubePlayer(video)
                         } catch (e: Exception) {
                             Log.d("YOUTUBE", "Error inicializar $e")
                         }
@@ -732,9 +732,9 @@ class MainActivity : AppCompatActivity() {
                                     myDataClass.lines.flatMap { it.listYoutube }.toMutableList()
 
                                 try {
-                                    binding.videoOverlayView.apply {
-                                        //clearListYoutube()
-                                        //addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
+                                    binding.overlayView.apply {
+                                        clearListYoutube()
+                                        addListYouTubeVideos(GlobalConfig.listYoutube.filter { it.page == GlobalConfig.currentPage })
                                     }
                                 } catch (e: Exception) {
                                     Log.d("YOUTUBE", "Error inicializar $e")

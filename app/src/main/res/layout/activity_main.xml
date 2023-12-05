@@ -274,7 +274,7 @@
         android:visibility="gone" />
 
     <com.orbys.demowhiteboard.ui.view.OverlayView
-        android:id="@+id/videoOverlayView"
+        android:id="@+id/overlayView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clickable="false"

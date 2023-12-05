@@ -5,7 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import com.orbys.demowhiteboard.domain.model.ImageBitmapData
 import com.orbys.demowhiteboard.domain.model.MyWhiteboard
-import com.orbys.demowhiteboard.ui.youtube.model.YoutubeVideo
+import com.orbys.demowhiteboard.ui.view.YoutubeVideo
 
 object GlobalConfig {
 
